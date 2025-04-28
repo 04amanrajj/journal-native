@@ -6,38 +6,34 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
+  ScrollView, StatusBar
 } from "react-native";
 
-import { FontAwesome } from "@expo/vector-icons";
+
 export default function Home() {
-
-
   const today = new Date();
-  const currentDay = today.getDay(); // Sunday = 0, Monday = 1, etc.
+  const currentDay = today.getDay(); 
 
-  // Find the first day of this week (Monday)
   const firstDayOfWeek = new Date(today);
   firstDayOfWeek.setDate(today.getDate() - ((currentDay + 6) % 7));
 
-  // Prepare 7 days (Monday to Sunday)
   const weekDates = Array.from({ length: 7 }, (_, idx) => {
     const date = new Date(firstDayOfWeek);
     date.setDate(firstDayOfWeek.getDate() + idx);
     return {
-      day: date.toLocaleDateString("en-US", { weekday: "short" }), // Mon, Tue, ...
-      date: date.getDate(), // 28, 29, ...
-      isToday: date.toDateString() === today.toDateString(), // mark today
+      day: date.toLocaleDateString("en-US", { weekday: "short" }),
+      date: date.getDate(),
+      isToday: date.toDateString() === today.toDateString(),
     };
-  });
+  },
+  );
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
-
-        <TopBar/>
-
+        <TopBar />
         {/* Greeting */}
 
         <Text style={styles.greeting}>
@@ -142,12 +138,30 @@ export default function Home() {
           <TouchableOpacity onPress={() => { }}>
             <Text style={styles.memoryButtonText}>...</Text>
           </TouchableOpacity>
+        </View><View style={styles.memoryItem}>
+          <View style={styles.memoryDate}>
+            <Text style={styles.memoryDay}>23</Text>
+
+            <Text style={styles.memoryMonth}>Jan</Text>
+          </View>
+
+          <View style={styles.memoryDetails}>
+            <Text style={styles.memoryLocation}>Prague, Czech Republic</Text>
+
+            <Text style={styles.memoryDescription}>
+              Arriving in Prague felt like stepping into a fairytale. The Old
+              Town Squar...
+            </Text>
+          </View>
+
+          <TouchableOpacity onPress={() => { }}>
+            <Text style={styles.memoryButtonText}>...</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-
-
+      <TouchableOpacity style={styles.createButton} onPress={() => { }}>
+        <Text style={{ color: "white", fontWeight: "bold" }}>Create</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -318,30 +332,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#3B3B3B",
   },
-  bottomNav: {
+  createButton: {
+    backgroundColor: "#F9A825",
+    borderRadius: 22,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    right: 20,
+    bottom: 90,
+    width: 100,
+    height: 50,
     position: "absolute",
-    bottom: 20,
-    left: "50%",
-    transform: [{ translateX: -50 }],
-    width: "90%",
-    maxWidth: 400,
-    backgroundColor: "white",
-    borderRadius: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-  },
-  bottomNavItem: {
-    alignItems: "center",
-  },
-  bottomNavLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#3B3B3B",
   },
 });
