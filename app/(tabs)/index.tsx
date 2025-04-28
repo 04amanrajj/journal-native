@@ -1,74 +1,347 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React from "react";
+import TopBar from "@/components/TopBar";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { FontAwesome } from "@expo/vector-icons";
+export default function Home() {
 
-export default function HomeScreen() {
+
+  const today = new Date();
+  const currentDay = today.getDay(); // Sunday = 0, Monday = 1, etc.
+
+  // Find the first day of this week (Monday)
+  const firstDayOfWeek = new Date(today);
+  firstDayOfWeek.setDate(today.getDate() - ((currentDay + 6) % 7));
+
+  // Prepare 7 days (Monday to Sunday)
+  const weekDates = Array.from({ length: 7 }, (_, idx) => {
+    const date = new Date(firstDayOfWeek);
+    date.setDate(firstDayOfWeek.getDate() + idx);
+    return {
+      day: date.toLocaleDateString("en-US", { weekday: "short" }), // Mon, Tue, ...
+      date: date.getDate(), // 28, 29, ...
+      isToday: date.toDateString() === today.toDateString(), // mark today
+    };
+  });
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Header */}
+
+        <TopBar/>
+
+        {/* Greeting */}
+
+        <Text style={styles.greeting}>
+          Good afternoon,
+          {"\n"}
+          <Text style={styles.greetingBold}>Zhofran!</Text>
+        </Text>
+
+        {/* Navigation Buttons */}
+
+        <View style={styles.navButtons}>
+          {weekDates.map((item, idx) => (
+            <View key={idx} style={styles.navButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.navButton,
+                  {
+                    backgroundColor: item.isToday ? "#F9A825" : "#FFFFFF",
+                    borderWidth: 1,
+                    borderColor: "#E0E0E0",
+                  },
+                ]}
+                onPress={() => { }}
+              >
+                <Text
+                  style={{
+                    color: item.isToday ? "white" : "black",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                  }}
+                >
+                  {item.date}
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.navButtonText}>{item.day}</Text>
+            </View>
+          ))}
+        </View>
+
+
+        {/* Stats and Quotes */}
+
+        <View style={styles.statsContainer}>
+          <View style={styles.stats}>
+            {[
+              { label: "Best streak", value: "21" },
+
+              { label: "Entries", value: "536" },
+
+              { label: "Days", value: "1.500" },
+            ].map((item, idx) => (
+              <View key={idx} style={styles.statItem}>
+                <Text style={styles.statLabel}>{item.label}</Text>
+
+                <Text style={styles.statValue}>{item.value}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.quoteContainer}>
+            <Text style={styles.quoteTitle}>Quotes of the day</Text>
+
+            <Text style={styles.quoteText}>
+              “Happiness is not by chance, but by choice.”
+            </Text>
+
+            <Text style={styles.quoteAuthor}>— Jim Rohn</Text>
+          </View>
+
+          <TouchableOpacity style={styles.feelingButton} onPress={() => { }}>
+            <Text style={styles.feelingButtonText}>
+              How are you feeling today?
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Memories Section */}
+
+        <View style={styles.memoriesHeader}>
+          <Text style={styles.memoriesTitle}>Today</Text>
+
+          <Text style={styles.memoriesCount}>2 Memories</Text>
+        </View>
+
+        <View style={styles.memoryItem}>
+          <View style={styles.memoryDate}>
+            <Text style={styles.memoryDay}>23</Text>
+
+            <Text style={styles.memoryMonth}>Jan</Text>
+          </View>
+
+          <View style={styles.memoryDetails}>
+            <Text style={styles.memoryLocation}>Prague, Czech Republic</Text>
+
+            <Text style={styles.memoryDescription}>
+              Arriving in Prague felt like stepping into a fairytale. The Old
+              Town Squar...
+            </Text>
+          </View>
+
+          <TouchableOpacity onPress={() => { }}>
+            <Text style={styles.memoryButtonText}>...</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Bottom Navigation */}
+
+
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF9E6",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 80,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  greeting: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#3B3B3B",
+    marginBottom: 24,
+  },
+  greetingBold: {
+    fontWeight: "bold",
+  },
+  navButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 32,
+    marginTop: 16,
+  },
+  navButtonContainer: {
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  navButton: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 24,
+  },
+  navButtonText: {
+    marginTop: 5,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#333",
+  },
+  statsContainer: {
+    backgroundColor: "white",
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  stats: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#F9A825",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "black",
+  },
+  quoteContainer: {
+    borderColor: "#E6E6E6",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    color: "#3B3B3B",
+  },
+  quoteTitle: {
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  quoteText: {
+    fontStyle: "italic",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  quoteAuthor: {
+    fontSize: 12,
+    fontWeight: "300",
+  },
+  feelingButton: {
+    backgroundColor: "#F9A825",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  feelingButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "white",
+  },
+  memoriesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  memoriesTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#3B3B3B",
+  },
+  memoriesCount: {
+    fontSize: 12,
+    fontWeight: "300",
+    color: "#3B3B3B",
+  },
+  memoryItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  memoryDate: {
+    backgroundColor: "#F9A825",
+    borderRadius: 12,
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  memoryDay: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  memoryMonth: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "300",
+  },
+  memoryDetails: {
+    flex: 1,
+  },
+  memoryLocation: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#3B3B3B",
+  },
+  memoryDescription: {
+    fontSize: 12,
+    fontWeight: "300",
+    color: "#6B7280",
+    maxWidth: 280,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  memoryButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3B3B3B",
+  },
+  bottomNav: {
+    position: "absolute",
+    bottom: 20,
+    left: "50%",
+    transform: [{ translateX: -50 }],
+    width: "90%",
+    maxWidth: 400,
+    backgroundColor: "white",
+    borderRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 12,
+  },
+  bottomNavItem: {
+    alignItems: "center",
+  },
+  bottomNavLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3B3B3B",
   },
 });
