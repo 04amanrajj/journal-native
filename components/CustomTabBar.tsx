@@ -26,8 +26,8 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 
           const iconName = (() => {
             if (route.name === 'index') return 'home';
+            if (route.name === 'create') return 'plus'; 
             if (route.name === 'explore') return 'search';
-            if (route.name === 'calendar') return 'calendar';
             return 'circle';
           })();
 
