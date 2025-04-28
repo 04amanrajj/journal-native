@@ -14,10 +14,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
       }}
-    >
+    >    
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
       <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
-      <Tabs.Screen name="calendar" options={{ title: 'Calendar' }} />
+      <Tabs.Screen name="create" options={{ title: 'Create' }} />
     </Tabs>
   );
 }
