@@ -1,372 +1,241 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from "react-native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+    faChevronLeft,
+    faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 
-import { FontAwesome } from "@expo/vector-icons";
-export default function Home() {
+const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+];
 
+const explore = () => {
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
+    const handleSelectDay = (day: number) => {
+        setSelectedDay(day);
+    };
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+    const getDaysInMonth = (month: number, year: number) => {
+        return new Date(year, month + 1, 0).getDate(); // 0th day of next month = last day of this month
+    };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
+    const goToPreviousMonth = () => {
+        setCurrentDate((prevDate) => {
+            const newDate = new Date(prevDate);
+            newDate.setMonth(newDate.getMonth() - 1);
+            return newDate;
+        });
+    };
 
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <FontAwesome name="sun-o" size={24} color="#F9A825" />
+    const goToNextMonth = () => {
+        setCurrentDate((prevDate) => {
+            const newDate = new Date(prevDate);
+            newDate.setMonth(newDate.getMonth() + 1);
+            return newDate;
+        });
+    };
 
-            <Text style={styles.dateText}>{currentDate}</Text>
-          </View>
+    const days = useMemo(() => {
+        const today = new Date();
+        const daysInMonth = getDaysInMonth(currentDate.getMonth(), currentDate.getFullYear());
+        const firstDayOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
-          <Image
-            source={{
-              uri: "https://storage.googleapis.com/a1aa/image/399c1188-8f92-43f0-9923-879989cbe663.jpg",
-            }}
-            style={styles.profileImage}
-          />
-        </View>
-
-        {/* Greeting */}
-
-        <Text style={styles.greeting}>
-          Good afternoon,
-          {"\n"}
-          <Text style={styles.greetingBold}>Zhofran!</Text>
-        </Text>
-
-        {/* Navigation Buttons */}
-
-        <View style={styles.navButtons}>
-          {["check", "check", "times", "map-marker", "", "", ""].map(
-            (icon, idx) => (
-              <View key={idx} style={styles.navButtonContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.navButton,
-                    {
-                      backgroundColor:
-                        idx <= 1
-                          ? "#F9A825"
-                          : idx === 2
-                            ? "#B3B3B3"
-                            : "transparent",
-                    },
-                  ]}
-                  onPress={() => { }}
+        const days = [];
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            days.push(<View key={`empty-${i}`} style={styles.dayContainer} />);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday =
+                day === today.getDate() &&
+                currentDate.getMonth() === today.getMonth() &&
+                currentDate.getFullYear() === today.getFullYear();
+            const isSelected = day === selectedDay;
+            days.push(
+                <View
+                    key={`day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
+                    style={styles.dayContainer}
                 >
-                  {icon ? (
-                    <FontAwesome
-                      name="check"
-                      size={idx === 3 ? 20 : 16}
-                      color="white"
-                    />
-                  ) : (
-                    <Text style={styles.navButtonText}>
-                      {["Thu", "Fri", "Sat"][idx - 4]}
+                    <TouchableOpacity onPress={() => handleSelectDay(day)}>
+                        <Text
+                            style={[
+                                styles.day,
+                                isToday && styles.todayDay,
+                                isSelected && styles.selectedDay,
+                            ]}
+                        >
+                            {day}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+        return days;
+    }, [currentDate, selectedDay]);
+
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+
+            {/* Your header remains same */}
+            <View style={styles.header}>
+                <Text style={styles.title}>
+                    VIEW YOUR JOURNALS
+                </Text>
+                <Image
+                    source={{
+                        uri: "https://storage.googleapis.com/a1aa/image/3cd0f475-e1c5-4f0c-50ec-62349e437b0c.jpg",
+                    }}
+                    style={styles.image}
+                />
+            </View>
+
+            <View style={styles.dateContainer}>
+                <View style={styles.monthContainer}>
+                    <Text style={styles.monthText}>
+                        <Text style={styles.bold}>{months[currentDate.getMonth()]}</Text>,{" "}
+                        {currentDate.getFullYear()}
                     </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )
-          )}
+                    <View style={{ flexDirection: "row", width: '40%', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                        <TouchableOpacity onPress={goToPreviousMonth} style={{ backgroundColor: '#fbbf59', padding: 10, marginRight: 2, borderRadius: "20%" }}>
+                            <FontAwesomeIcon icon={faChevronLeft} size={20} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={goToNextMonth} style={{ backgroundColor: '#fbbf59', padding: 10, borderRadius: "20%" }}>
+                            <FontAwesomeIcon icon={faChevronRight} size={20} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.calendar}>
+                <View style={styles.weekdays}>
+                    {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                        <Text key={`${day}-${index}`} style={styles.weekday}>
+                            {day}
+                        </Text>
+                    ))}
+                </View>
+                <View style={styles.daysContainer}>{days}</View>
+            </View>
         </View>
-
-        {/* Stats and Quotes */}
-
-        <View style={styles.statsContainer}>
-          <View style={styles.stats}>
-            {[
-              { label: "Best streak", value: "21" },
-
-              { label: "Entries", value: "536" },
-
-              { label: "Days", value: "1.500" },
-            ].map((item, idx) => (
-              <View key={idx} style={styles.statItem}>
-                <Text style={styles.statLabel}>{item.label}</Text>
-
-                <Text style={styles.statValue}>{item.value}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.quoteContainer}>
-            <Text style={styles.quoteTitle}>Quotes of the day</Text>
-
-            <Text style={styles.quoteText}>
-              “Happiness is not by chance, but by choice.”
-            </Text>
-
-            <Text style={styles.quoteAuthor}>— Jim Rohn</Text>
-          </View>
-
-          <TouchableOpacity style={styles.feelingButton} onPress={() => { }}>
-            <Text style={styles.feelingButtonText}>
-              How are you feeling today?
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Memories Section */}
-
-        <View style={styles.memoriesHeader}>
-          <Text style={styles.memoriesTitle}>Today</Text>
-
-          <Text style={styles.memoriesCount}>2 Memories</Text>
-        </View>
-
-        <View style={styles.memoryItem}>
-          <View style={styles.memoryDate}>
-            <Text style={styles.memoryDay}>23</Text>
-
-            <Text style={styles.memoryMonth}>Jan</Text>
-          </View>
-
-          <View style={styles.memoryDetails}>
-            <Text style={styles.memoryLocation}>Prague, Czech Republic</Text>
-
-            <Text style={styles.memoryDescription}>
-              Arriving in Prague felt like stepping into a fairytale. The Old
-              Town Squar...
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={() => { }}>
-            <Text style={styles.memoryButtonText}>...</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-
-      
-    </View>
-  );
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF9E6",
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 80,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dateText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#1A1A1A",
-    marginLeft: 8,
-  },
-  profileImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#3B3B3B",
-    marginBottom: 24,
-  },
-  greetingBold: {
-    fontWeight: "bold",
-  },
-  navButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 32,
-  },
-  navButtonContainer: {
-    flex: 1,
-    alignItems: "center",
-  },
-  navButton: {
-    width: 48,
-    height: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 24,
-  },
-  navButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
-  statsContainer: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#F9A825",
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "black",
-  },
-  quoteContainer: {
-    borderColor: "#E6E6E6",
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    color: "#3B3B3B",
-  },
-  quoteTitle: {
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  quoteText: {
-    fontStyle: "italic",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  quoteAuthor: {
-    fontSize: 12,
-    fontWeight: "300",
-  },
-  feelingButton: {
-    backgroundColor: "#F9A825",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    alignItems: "center",
-  },
-  feelingButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "white",
-  },
-  memoriesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  memoriesTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
-  memoriesCount: {
-    fontSize: 12,
-    fontWeight: "300",
-    color: "#3B3B3B",
-  },
-  memoryItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  memoryDate: {
-    backgroundColor: "#F9A825",
-    borderRadius: 12,
-    width: 48,
-    height: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  memoryDay: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  memoryMonth: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "300",
-  },
-  memoryDetails: {
-    flex: 1,
-  },
-  memoryLocation: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
-  memoryDescription: {
-    fontSize: 12,
-    fontWeight: "300",
-    color: "#6B7280",
-    maxWidth: 280,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
-  memoryButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 20,
-    left: "50%",
-    transform: [{ translateX: -50 }],
-    width: "90%",
-    maxWidth: 400,
-    backgroundColor: "white",
-    borderRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-  },
-  bottomNavItem: {
-    alignItems: "center",
-  },
-  bottomNavLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
+    container: {
+        flex: 1,
+        backgroundColor: "#FFF9E6",
+        padding: 16,
+        paddingTop: 100,
+    },
+    header: {
+        borderRadius: 24,
+        paddingBottom: 24,
+        paddingHorizontal: 14,
+        position: "relative",
+    },
+    title: {
+        color: "#000",
+        fontSize: 24,
+        fontWeight: "900",
+        textAlign: "left",
+    },
+    image: {
+        width: '100%',
+        height: 150,
+        borderRadius: 16,
+        marginTop: 24,
+        alignSelf: "center",
+    },
+    dateContainer: {
+        paddingTop: 24,
+        paddingHorizontal: 24,
+    },
+    optionText: {
+        color: "#4b5563",
+        fontSize: 14,
+        marginBottom: 8,
+    },
+    monthContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 16,
+        width: '100%',
+        justifyContent: 'space-between',
+    },
+    monthText: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#4b5563",
+        width: '40%',
+        textAlign: "left",
+    },
+    bold: {
+        fontWeight: "bold",
+    },
+    calendar: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5, // Add this for Android
+        padding: 16,
+    },
+    weekdays: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        marginBottom: 8,
+    },
+    weekday: {
+        color: "#9ca3af",
+        fontSize: 12,
+        fontWeight: "600",
+        textAlign: "left",
+
+    },
+    daysContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
+    dayContainer: {
+        width: "14%",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    day: {
+        width: 28,
+        height: 28,
+        lineHeight: 28,
+        borderRadius: 14,
+        textAlign: "center",
+        color: "#4b5563",
+        fontSize: 14,
+    },
+    todayDay: {
+        backgroundColor: "#3b82f6", // blue background
+        color: "#fff",              // white text
+        fontWeight: "700",
+    },
+    selectedDay: {
+        backgroundColor: "#f87171",
+        color: "#fff",
+        fontWeight: "600",
+    },
 });
+
+export default explore;
