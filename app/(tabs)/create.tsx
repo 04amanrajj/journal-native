@@ -2,17 +2,44 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome, Feather } from '@expo/vector-icons'; // using Expo's vector icons
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function NewJournalScreen() {
 
-
-  
+  const [title, setTitle] = useState('');
+  const [text, setText] = useState('');
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  const handleSaveJournal = async () => {
+    if (title.trim() === "" && text.trim() === "") return;
+
+    const newEntry = {
+      title: title.trim(),
+      text: text.trim(),
+      date: new Date().toISOString(),
+    };
+
+    try {
+      const existingEntries = await AsyncStorage.getItem('journals');
+      const entries = existingEntries ? JSON.parse(existingEntries) : [];
+
+      entries.push(newEntry);
+
+      await AsyncStorage.setItem('journals', JSON.stringify(entries));
+
+      setTitle('');
+      setText('');
+
+      console.log('Journal saved!');
+    } catch (error) {
+      console.error('Error saving journal:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -25,8 +52,8 @@ export default function NewJournalScreen() {
           <Text style={styles.headerSubtitle}>{currentDate}</Text>
         </View>
 
-        <TouchableOpacity>
-          <Text style={styles.doneButton}>Done</Text>
+        <TouchableOpacity onPress={handleSaveJournal}>
+          <Text style={styles.doneButton}  >Save</Text>
         </TouchableOpacity>
       </View>
 
@@ -50,13 +77,15 @@ export default function NewJournalScreen() {
 
       {/* Title and Text Area */}
       <View style={styles.inputSection}>
-        <TextInput placeholder='Title' style={styles.title} />
+        <TextInput placeholder='Title' style={styles.title} value={title} onChangeText={setTitle} />
         <View style={{ height: 1, backgroundColor: 'lightgray', marginBottom: 20 }} />
         <TextInput
           placeholder="What do you want to write about?"
           placeholderTextColor="gray"
           multiline
           style={styles.textArea}
+          value={text}
+          onChangeText={setText}
         />
 
         {/* Bottom Icons */}
@@ -70,6 +99,18 @@ export default function NewJournalScreen() {
           <TouchableOpacity style={styles.iconButton}>
             <FontAwesome name="microphone" size={20} color="gray" />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              const randomParagraph = `This is a randomly generated paragraph for testing purposes. It contains multiple sentences to simulate real journal content. The number ${Math.floor(Math.random() * 1000)} is included to make it unique. Another random number: ${Math.floor(Math.random() * 1000)}. Enjoy testing!`;
+
+              setTitle(`#Test ${Math.floor(Math.random() * 100)}`);
+              setText(randomParagraph);
+            }}
+          >
+            <FontAwesome name="random" size={20} color="gray" />
+          </TouchableOpacity>
+
         </View>
       </View>
     </View>
@@ -131,7 +172,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    },
+  },
   moodIcon: {
     width: 28,
     height: 28,
