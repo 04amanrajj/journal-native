@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import TopBar from "@/components/TopBar";
 import {
   View,
@@ -8,12 +8,15 @@ import {
   StyleSheet,
   ScrollView, StatusBar
 } from "react-native";
+import JournalFetcher from "@/components/JournalFetcher";
 
 
 export default function Home() {
+  const [journals, setJournals] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedMemories, setSelectedMemories] = useState<any[]>([]);
   const today = new Date();
-  const currentDay = today.getDay(); 
-
+  const currentDay = today.getDay();
   const firstDayOfWeek = new Date(today);
   firstDayOfWeek.setDate(today.getDate() - ((currentDay + 6) % 7));
 
@@ -22,11 +25,24 @@ export default function Home() {
     date.setDate(firstDayOfWeek.getDate() + idx);
     return {
       day: date.toLocaleDateString("en-US", { weekday: "short" }),
-      date: date.getDate(),
+      date: date, // Pass the full Date object
       isToday: date.toDateString() === today.toDateString(),
     };
-  },
-  );
+  });
+
+  const handleDateSelect = (date: Date) => {
+    const selectedDateStr = date.toDateString(); // Use toDateString for comparison
+
+    const filtered = journals.filter((journal) => {
+      if (!journal.date) return false; // Skip invalid entries
+      const journalDate = new Date(journal.date); // Parse journal.date
+      return journalDate.toDateString() === selectedDateStr;
+    });
+
+    console.log("Selected date:", selectedDateStr);
+    setSelectedDate(selectedDateStr);
+    setSelectedMemories(filtered);
+  };
 
   return (
     <View style={styles.container}>
@@ -39,7 +55,7 @@ export default function Home() {
         <Text style={styles.greeting}>
           Good afternoon,
           {"\n"}
-          <Text style={styles.greetingBold}>Zhofran!</Text>
+          <Text style={styles.greetingBold}>Aman!</Text>
         </Text>
 
         {/* Navigation Buttons */}
@@ -56,7 +72,7 @@ export default function Home() {
                     borderColor: "#E0E0E0",
                   },
                 ]}
-                onPress={() => { }}
+                onPress={() => handleDateSelect(new Date(firstDayOfWeek.getFullYear(), firstDayOfWeek.getMonth(), item.date.getDate()))}
               >
                 <Text
                   style={{
@@ -64,8 +80,9 @@ export default function Home() {
                     fontWeight: "bold",
                     fontSize: 16,
                   }}
+
                 >
-                  {item.date}
+                  {item.date.getDate()}
                 </Text>
               </TouchableOpacity>
 
@@ -114,54 +131,36 @@ export default function Home() {
         {/* Memories Section */}
 
         <View style={styles.memoriesHeader}>
-          <Text style={styles.memoriesTitle}>Today</Text>
-
-          <Text style={styles.memoriesCount}>2 Memories</Text>
+          <Text style={styles.memoriesCount}>{selectedMemories.length ? selectedMemories.length : "No"} {selectedMemories.length === 1 ? "Memory" : "Memories"}</Text>
         </View>
 
-        <View style={styles.memoryItem}>
-          <View style={styles.memoryDate}>
-            <Text style={styles.memoryDay}>23</Text>
-
-            <Text style={styles.memoryMonth}>Jan</Text>
+        <View style={styles.memoryDetails}>
+          <JournalFetcher
+            onData={(data) => {
+              if (Array.isArray(data)) {
+                const validJournals = data.filter((journal) => {
+                  return journal.date && !isNaN(new Date(journal.date).getTime());
+                });
+                setJournals(validJournals);
+              } else {
+                console.error("Invalid data received from JournalFetcher:", data);
+              }
+            }}
+          />
+          <View>
+            {selectedMemories.slice(-3).reverse().map((journal, index) => {
+              return (
+                <View key={index} style={styles.memoryItem}>
+                  <View style={styles.journalEntry}>
+                    <Text style={styles.journalTitle}>{journal.title}</Text>
+                    <Text style={styles.journalText}>{journal.text}</Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
-
-          <View style={styles.memoryDetails}>
-            <Text style={styles.memoryLocation}>Prague, Czech Republic</Text>
-
-            <Text style={styles.memoryDescription}>
-              Arriving in Prague felt like stepping into a fairytale. The Old
-              Town Squar...
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={() => { }}>
-            <Text style={styles.memoryButtonText}>...</Text>
-          </TouchableOpacity>
-        </View><View style={styles.memoryItem}>
-          <View style={styles.memoryDate}>
-            <Text style={styles.memoryDay}>23</Text>
-
-            <Text style={styles.memoryMonth}>Jan</Text>
-          </View>
-
-          <View style={styles.memoryDetails}>
-            <Text style={styles.memoryLocation}>Prague, Czech Republic</Text>
-
-            <Text style={styles.memoryDescription}>
-              Arriving in Prague felt like stepping into a fairytale. The Old
-              Town Squar...
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={() => { }}>
-            <Text style={styles.memoryButtonText}>...</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
-      <TouchableOpacity style={styles.createButton} onPress={() => { }}>
-        <Text style={{ color: "white", fontWeight: "bold" }}>Create</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -213,7 +212,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 24,
     padding: 24,
-    marginBottom: 32,
+    marginBottom: 22,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -277,15 +276,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  memoriesTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#3B3B3B",
-  },
   memoriesCount: {
     fontSize: 12,
-    fontWeight: "300",
+    fontWeight: "900",
     color: "#3B3B3B",
+    textAlign: "center",
+    borderRadius: 12,
+    overflow: "hidden",
+    width: '30%',
+    margin: 'auto',
   },
   memoryItem: {
     flexDirection: "row",
@@ -346,5 +345,32 @@ const styles = StyleSheet.create({
     position: "absolute",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
+  },
+  journalContainer: {
+    flex: 1,
+    backgroundColor: '#FFF9E6',
+    padding: 16,
+  },
+  journalEntry: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  journalTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  journalText: {
+    marginTop: 8,
+    fontSize: 14,
+  },
+  journalDate: {
+    marginTop: 8,
+    fontSize: 10,
+    color: 'gray',
   },
 });
