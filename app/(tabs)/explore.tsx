@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from "react-native";
+import React, { useEffect, useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList, StatusBar } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     faChevronLeft,
     faChevronRight,
@@ -22,8 +24,26 @@ const months = [
 ];
 
 const explore = () => {
+    const [journals, setJournals] = useState<{ title: string; text: string; date: string }[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const loadJournals = async () => {
+                try {
+                    const savedJournals = await AsyncStorage.getItem('journals');
+                    if (savedJournals) {
+                        setJournals(JSON.parse(savedJournals));
+                    }
+                } catch (error) {
+                    console.error('Error loading journals:', error);
+                }
+            };
+
+            loadJournals();
+        }, [])
+    );
 
     const handleSelectDay = (day: number) => {
         setSelectedDay(day);
@@ -102,34 +122,50 @@ const explore = () => {
                     style={styles.image}
                 />
             </View>
+            <FlatList
+                data={journals.reverse()}
+                keyExtractor={(item, index) => index.toString()}
+                ListHeaderComponent={
+                    <>
+                        <View style={styles.dateContainer}>
+                            <View style={styles.monthContainer}>
+                                <Text style={styles.monthText}>
+                                    <Text style={styles.bold}>{months[currentDate.getMonth()]}</Text>,{" "}
+                                    {currentDate.getFullYear()}
+                                </Text>
+                                <View style={{ flexDirection: "row", width: '40%', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                                    <TouchableOpacity onPress={goToPreviousMonth} style={{ backgroundColor: '#fbbf59', padding: 10, marginRight: 2, borderRadius: "20%" }}>
+                                        <FontAwesomeIcon icon={faChevronLeft} size={20} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={goToNextMonth} style={{ backgroundColor: '#fbbf59', padding: 10, borderRadius: "20%" }}>
+                                        <FontAwesomeIcon icon={faChevronRight} size={20} />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
 
-            <View style={styles.dateContainer}>
-                <View style={styles.monthContainer}>
-                    <Text style={styles.monthText}>
-                        <Text style={styles.bold}>{months[currentDate.getMonth()]}</Text>,{" "}
-                        {currentDate.getFullYear()}
-                    </Text>
-                    <View style={{ flexDirection: "row", width: '40%', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-                        <TouchableOpacity onPress={goToPreviousMonth} style={{ backgroundColor: '#fbbf59', padding: 10, marginRight: 2, borderRadius: "20%" }}>
-                            <FontAwesomeIcon icon={faChevronLeft} size={20} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={goToNextMonth} style={{ backgroundColor: '#fbbf59', padding: 10, borderRadius: "20%" }}>
-                            <FontAwesomeIcon icon={faChevronRight} size={20} />
-                        </TouchableOpacity>
+                        <View style={styles.calendar}>
+                            <View style={styles.weekdays}>
+                                {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                                    <Text key={`${day}-${index}`} style={styles.weekday}>
+                                        {day}
+                                    </Text>
+                                ))}
+                            </View>
+                            <View style={styles.daysContainer}>{days}</View>
+                        </View>
+
+                        <Text style={{ margin: 20, fontSize: 28, fontWeight: "900" }}>Recent Journal Entries</Text>
+                    </>
+                }
+                renderItem={({ item }) => (
+                    <View style={styles.journalEntry}>
+                        <Text style={styles.journalTitle}>{item.title}</Text>
+                        <Text style={styles.journalText}>{item.text}</Text>
+                        <Text style={styles.journalDate}>{new Date(item.date).toLocaleString()}</Text>
                     </View>
-                </View>
-            </View>
-
-            <View style={styles.calendar}>
-                <View style={styles.weekdays}>
-                    {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-                        <Text key={`${day}-${index}`} style={styles.weekday}>
-                            {day}
-                        </Text>
-                    ))}
-                </View>
-                <View style={styles.daysContainer}>{days}</View>
-            </View>
+                )}
+            />
         </View>
     );
 };
@@ -235,6 +271,33 @@ const styles = StyleSheet.create({
         backgroundColor: "#f87171",
         color: "#fff",
         fontWeight: "600",
+    },
+    journalContainer: {
+        flex: 1,
+        backgroundColor: '#FFF9E6',
+        padding: 16,
+    },
+    journalEntry: {
+        backgroundColor: 'white',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+    },
+    journalTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    journalText: {
+        marginTop: 8,
+        fontSize: 14,
+    },
+    journalDate: {
+        marginTop: 8,
+        fontSize: 10,
+        color: 'gray',
     },
 });
 
