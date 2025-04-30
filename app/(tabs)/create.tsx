@@ -3,9 +3,11 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-nativ
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome, Feather } from '@expo/vector-icons'; // using Expo's vector icons
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Notification from '@/components/Notification'; // Import the Notification component
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function NewJournalScreen() {
-
+  const [showNotification, setShowNotification] = useState(false); // Control notification visibility
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const currentDate = new Date().toLocaleDateString("en-US", {
@@ -36,84 +38,90 @@ export default function NewJournalScreen() {
       setText('');
 
       console.log('Journal saved!');
+      setShowNotification(true); // Show the notification
     } catch (error) {
       console.error('Error saving journal:', error);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>New journal</Text>
-          <Text style={styles.headerSubtitle}>{currentDate}</Text>
-        </View>
+    <GestureHandlerRootView>
+      <View style={styles.container}>
+        <StatusBar style="dark" />
 
-        <TouchableOpacity onPress={handleSaveJournal}>
-          <Text style={styles.doneButton}  >Save</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Notification Popup */}
+        {showNotification && <Notification />}
 
-      {/* Mood and Tag Section */}
-      <View style={styles.moodTagSection}>
-        <View style={styles.moodBox}>
-          <View style={styles.moodIcon}>
-            <FontAwesome name="smile-o" size={24} color="white" />
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>New journal</Text>
+            <Text style={styles.headerSubtitle}>{currentDate}</Text>
           </View>
-          <View>
-            <Text style={styles.moodText}>How is your mood today?</Text>
-            <Text style={styles.moodSubText}>Neutral</Text>
+          <TouchableOpacity onPress={handleSaveJournal}>
+            <Text style={styles.doneButton}>Save</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Mood and Tag Section */}
+        <View style={styles.moodTagSection}>
+          <View style={styles.moodBox}>
+            <View style={styles.moodIcon}>
+              <FontAwesome name="smile-o" size={24} color="white" />
+            </View>
+            <View>
+              <Text style={styles.moodText}>How is your mood today?</Text>
+              <Text style={styles.moodSubText}>Neutral</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.tagButton}>
+            <Feather name="tag" size={12} color="black" />
+            <Text style={styles.tagButtonText}>Add tags</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Title and Text Area */}
+        <View style={styles.inputSection}>
+          <TextInput placeholder='Title' style={styles.title} value={title} onChangeText={setTitle} />
+          <View style={{ height: 1, backgroundColor: 'lightgray', marginBottom: 20 }} />
+          <TextInput
+            placeholder="What do you want to write about?"
+            placeholderTextColor="gray"
+            multiline
+            style={styles.textArea}
+            value={text}
+            onChangeText={setText}
+          />
+
+          {/* Bottom Icons */}
+          <View style={styles.bottomIcons}>
+            <TouchableOpacity style={styles.iconButton}>
+              <FontAwesome name="image" size={20} color="gray" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <FontAwesome name="camera" size={20} color="gray" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <FontAwesome name="microphone" size={20} color="gray" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => {
+                const randomParagraph = `This is a randomly generated paragraph for testing purposes. It contains multiple sentences to simulate real journal content. The number ${Math.floor(Math.random() * 1000)} is included to make it unique. Another random number: ${Math.floor(Math.random() * 1000)}. Enjoy testing!`;
+
+                setTitle(`#Test ${Math.floor(Math.random() * 100)}`);
+                setText(randomParagraph);
+              }}
+            >
+              <FontAwesome name="random" size={20} color="gray" />
+            </TouchableOpacity>
+
           </View>
         </View>
-
-        <TouchableOpacity style={styles.tagButton}>
-          <Feather name="tag" size={12} color="black" />
-          <Text style={styles.tagButtonText}>Add tags</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Title and Text Area */}
-      <View style={styles.inputSection}>
-        <TextInput placeholder='Title' style={styles.title} value={title} onChangeText={setTitle} />
-        <View style={{ height: 1, backgroundColor: 'lightgray', marginBottom: 20 }} />
-        <TextInput
-          placeholder="What do you want to write about?"
-          placeholderTextColor="gray"
-          multiline
-          style={styles.textArea}
-          value={text}
-          onChangeText={setText}
-        />
-
-        {/* Bottom Icons */}
-        <View style={styles.bottomIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <FontAwesome name="image" size={20} color="gray" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <FontAwesome name="camera" size={20} color="gray" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <FontAwesome name="microphone" size={20} color="gray" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              const randomParagraph = `This is a randomly generated paragraph for testing purposes. It contains multiple sentences to simulate real journal content. The number ${Math.floor(Math.random() * 1000)} is included to make it unique. Another random number: ${Math.floor(Math.random() * 1000)}. Enjoy testing!`;
-
-              setTitle(`#Test ${Math.floor(Math.random() * 100)}`);
-              setText(randomParagraph);
-            }}
-          >
-            <FontAwesome name="random" size={20} color="gray" />
-          </TouchableOpacity>
-
-        </View>
-      </View>
-    </View>
+      </View >
+    </GestureHandlerRootView>
   );
 }
 
@@ -248,5 +256,17 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  showNotificationButton: {
+    backgroundColor: "#F9A825",
+    padding: 12,
+    borderRadius: 8,
+    bottom: 100,
+    marginTop: 20,
+    alignSelf: "center",
+  },
+  showNotificationButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
