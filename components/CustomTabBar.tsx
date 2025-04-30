@@ -28,6 +28,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
             if (route.name === 'index') return 'home';
             if (route.name === 'create') return 'plus'; 
             if (route.name === 'explore') return 'search';
+            if (route.name === 'about-me') return 'user';
             return 'circle';
           })();
 
