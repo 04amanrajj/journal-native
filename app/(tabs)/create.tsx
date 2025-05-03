@@ -5,6 +5,7 @@ import { Ionicons, FontAwesome, Feather } from '@expo/vector-icons'; // using Ex
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Notification from '@/components/Notification'; // Import the Notification component
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import axios from 'axios';
 
 export default function NewJournalScreen() {
   const [showNotification, setShowNotification] = useState(false); // Control notification visibility
@@ -22,21 +23,20 @@ export default function NewJournalScreen() {
 
     const newEntry = {
       title: title.trim(),
-      text: text.trim(),
-      date: new Date().toISOString(),
+      content: text.trim(),
+      // date: new Date().toISOString(),
     };
 
     try {
-      const existingEntries = await AsyncStorage.getItem('journals');
-      const entries = existingEntries ? JSON.parse(existingEntries) : [];
 
-      entries.push(newEntry);
+      const response = await axios.post('https://journal-app-backend-kxqs.onrender.com/journal/create', newEntry, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await AsyncStorage.getItem('authToken')}`,
+        },
+      });
 
-      await AsyncStorage.setItem('journals', JSON.stringify(entries));
-
-      setTitle('');
-      setText('');
-
+      console.log('Response from server:', response.data);
       console.log('Journal saved!');
       setShowNotification(true); // Show the notification
     } catch (error) {
@@ -103,9 +103,6 @@ export default function NewJournalScreen() {
             <TouchableOpacity style={styles.iconButton}>
               <FontAwesome name="camera" size={20} color="gray" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <FontAwesome name="microphone" size={20} color="gray" />
-            </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => {
@@ -116,6 +113,15 @@ export default function NewJournalScreen() {
               }}
             >
               <FontAwesome name="random" size={20} color="gray" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}
+              onPress={() => {
+                setTitle('');
+                setText('');
+                setShowNotification(false); // Hide the notification
+              }}
+            >
+              <FontAwesome name="times" size={20} color="gray" />
             </TouchableOpacity>
 
           </View>

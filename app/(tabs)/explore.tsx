@@ -1,12 +1,15 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList, StatusBar } from "react-native";
+import React, { useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import {
     faChevronLeft,
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+import JournalFetcher from "@/components/JournalFetcher";
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import { Link } from "expo-router";
+import { ThemedText } from "@/components/ThemedText";
 
 const months = [
     "Jan",
@@ -24,26 +27,8 @@ const months = [
 ];
 
 const explore = () => {
-    const [journals, setJournals] = useState<{ title: string; text: string; date: string }[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
-
-    useFocusEffect(
-        React.useCallback(() => {
-            const loadJournals = async () => {
-                try {
-                    const savedJournals = await AsyncStorage.getItem('journals');
-                    if (savedJournals) {
-                        setJournals(JSON.parse(savedJournals));
-                    }
-                } catch (error) {
-                    console.error('Error loading journals:', error);
-                }
-            };
-
-            loadJournals();
-        }, [])
-    );
 
     const handleSelectDay = (day: number) => {
         setSelectedDay(day);
@@ -107,66 +92,63 @@ const explore = () => {
     }, [currentDate, selectedDay]);
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="dark-content" />
+        <GestureHandlerRootView>
+            <View style={styles.container}>
+                <StatusBar barStyle="dark-content" />
 
-            {/* Your header remains same */}
-            <View style={styles.header}>
-                <Text style={styles.title}>
-                    VIEW YOUR JOURNALS
-                </Text>
-                <Image
-                    source={{
-                        uri: "https://storage.googleapis.com/a1aa/image/3cd0f475-e1c5-4f0c-50ec-62349e437b0c.jpg",
-                    }}
-                    style={styles.image}
-                />
-            </View>
-            <FlatList
-                data={journals.reverse()}
-                keyExtractor={(item, index) => index.toString()}
-                ListHeaderComponent={
-                    <>
-                        <View style={styles.dateContainer}>
-                            <View style={styles.monthContainer}>
-                                <Text style={styles.monthText}>
-                                    <Text style={styles.bold}>{months[currentDate.getMonth()]}</Text>,{" "}
-                                    {currentDate.getFullYear()}
-                                </Text>
-                                <View style={{ flexDirection: "row", width: '40%', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-                                    <TouchableOpacity onPress={goToPreviousMonth} style={{ backgroundColor: '#fbbf59', padding: 10, marginRight: 2, borderRadius: "20%" }}>
-                                        <FontAwesomeIcon icon={faChevronLeft} size={20} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={goToNextMonth} style={{ backgroundColor: '#fbbf59', padding: 10, borderRadius: "20%" }}>
-                                        <FontAwesomeIcon icon={faChevronRight} size={20} />
-                                    </TouchableOpacity>
-                                </View>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.title}>VIEW YOUR JOURNALS</Text>
+                    <Image
+                        source={{
+                            uri: "https://storage.googleapis.com/a1aa/image/3cd0f475-e1c5-4f0c-50ec-62349e437b0c.jpg",
+                        }}
+                        style={styles.image}
+                    />
+                </View>
+                {/* Calendar */}
+
+
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                    style={{ flex: 1 }}
+                    nestedScrollEnabled={true}
+                >
+                    <View style={styles.dateContainer}>
+                        <View style={styles.monthContainer}>
+                            <Text style={styles.monthText}>
+                                <Text style={styles.bold}>{months[currentDate.getMonth()]}</Text>,{" "}
+                                {currentDate.getFullYear()}
+                            </Text>
+                            <View style={{ flexDirection: "row", width: "40%", justifyContent: "flex-end", alignItems: "flex-end" }}>
+                                <TouchableOpacity onPress={goToPreviousMonth} style={{ backgroundColor: "#fbbf59", padding: 10, marginRight: 2, borderRadius: "20%" }}>
+                                    <FontAwesomeIcon icon={faChevronLeft} size={20} />
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={goToNextMonth} style={{ backgroundColor: "#fbbf59", padding: 10, borderRadius: "20%" }}>
+                                    <FontAwesomeIcon icon={faChevronRight} size={20} />
+                                </TouchableOpacity>
                             </View>
                         </View>
-
-                        <View style={styles.calendar}>
-                            <View style={styles.weekdays}>
-                                {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-                                    <Text key={`${day}-${index}`} style={styles.weekday}>
-                                        {day}
-                                    </Text>
-                                ))}
-                            </View>
-                            <View style={styles.daysContainer}>{days}</View>
-                        </View>
-
-                        <Text style={{ margin: 20, fontSize: 28, fontWeight: "900" }}>Recent Journal Entries</Text>
-                    </>
-                }
-                renderItem={({ item }) => (
-                    <View style={styles.journalEntry}>
-                        <Text style={styles.journalTitle}>{item.title}</Text>
-                        <Text style={styles.journalText}>{item.text}</Text>
-                        <Text style={styles.journalDate}>{new Date(item.date).toLocaleString()}</Text>
                     </View>
-                )}
-            />
-        </View>
+                    <View style={styles.calendar}>
+                        <View style={styles.weekdays}>
+                            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                                <Text key={`${day}-${index}`} style={styles.weekday}>
+                                    {day}
+                                </Text>
+                            ))}
+                        </View>
+                        <View style={styles.daysContainer}>{days}</View>
+                    </View>
+
+                    {/* JournalFetcher */}
+                    <Text style={{ margin: 20, fontSize: 28, fontWeight: "900", fontStyle: 'italic' }}>Recent Journal Entries</Text>
+                    <JournalFetcher />
+                </ScrollView>
+            </View>
+        </GestureHandlerRootView>
+
     );
 };
 
@@ -190,7 +172,7 @@ const styles = StyleSheet.create({
         textAlign: "left",
     },
     image: {
-        width: '100%',
+        width: "100%",
         height: 150,
         borderRadius: 16,
         marginTop: 24,
@@ -200,23 +182,18 @@ const styles = StyleSheet.create({
         paddingTop: 24,
         paddingHorizontal: 24,
     },
-    optionText: {
-        color: "#4b5563",
-        fontSize: 14,
-        marginBottom: 8,
-    },
     monthContainer: {
         flexDirection: "row",
         alignItems: "center",
         marginBottom: 16,
-        width: '100%',
-        justifyContent: 'space-between',
+        width: "100%",
+        justifyContent: "space-between",
     },
     monthText: {
         fontSize: 18,
         fontWeight: "600",
         color: "#4b5563",
-        width: '40%',
+        width: "40%",
         textAlign: "left",
     },
     bold: {
@@ -229,7 +206,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-        elevation: 5, // Add this for Android
+        elevation: 5,
         padding: 16,
     },
     weekdays: {
@@ -242,7 +219,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "600",
         textAlign: "left",
-
     },
     daysContainer: {
         flexDirection: "row",
@@ -263,41 +239,14 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     todayDay: {
-        backgroundColor: "#3b82f6", // blue background
-        color: "#fff",              // white text
+        backgroundColor: "#3b82f6",
+        color: "#fff",
         fontWeight: "700",
     },
     selectedDay: {
         backgroundColor: "#f87171",
         color: "#fff",
         fontWeight: "600",
-    },
-    journalContainer: {
-        flex: 1,
-        backgroundColor: '#FFF9E6',
-        padding: 16,
-    },
-    journalEntry: {
-        backgroundColor: 'white',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-    },
-    journalTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    journalText: {
-        marginTop: 8,
-        fontSize: 14,
-    },
-    journalDate: {
-        marginTop: 8,
-        fontSize: 10,
-        color: 'gray',
     },
 });
 
