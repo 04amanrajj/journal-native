@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
@@ -8,46 +8,48 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
   return (
     <View style={styles.wrapper}>
       <BlurView intensity={90} tint="light" style={styles.blurContainer}>
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
+        {state.routes
+          .filter((route) => route.name !== 'auth' && route.name !== 'about-me') // Exclude 'auth' and 'about-me'
+          .map((route, index) => {
+            const { options } = descriptors[route.key];
+            const isFocused = state.index === index;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true
-            });
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-          const iconName = (() => {
-            if (route.name === 'index') return 'home';
-            if (route.name === 'create') return 'plus'; 
-            if (route.name === 'explore') return 'search';
-            if (route.name === 'about-me') return 'user';
-            return 'circle';
-          })();
+            const iconName = (() => {
+              if (route.name === 'index') return 'home';
+              if (route.name === 'create') return 'plus';
+              if (route.name === 'explore') return 'search';
+              if (route.name === 'profile') return 'user';
+              return 'circle';
+            })();
 
-          return (
-            <TouchableOpacity
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              onPress={onPress}
-              style={styles.tabButton}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.iconContainer, isFocused && styles.activeIcon]}>
-                <FontAwesome name={iconName} size={20} color={isFocused ? '#fff' : '#222'} />
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+            return (
+              <TouchableOpacity
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={options.tabBarAccessibilityLabel}
+                onPress={onPress}
+                style={[styles.tabButton, isFocused && styles.activeTabButton]}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.iconContainer, isFocused && styles.activeIcon]}>
+                  <FontAwesome name={iconName} size={20} color={isFocused ? '#fff' : '#222'} />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
       </BlurView>
     </View>
   );
@@ -63,7 +65,7 @@ const styles = StyleSheet.create({
   },
   blurContainer: {
     flexDirection: 'row',
-    overflow: 'hidden', // Important to keep blur inside border radius
+    overflow: 'hidden', // Ensure the BlurView clips its children
     borderRadius: 40,
     paddingVertical: 10,
     paddingHorizontal: 25,
@@ -79,6 +81,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden', // Ensure the TouchableOpacity clips its children
+    borderRadius: 22, // Match the border radius of the active icon
+  },
+  activeTabButton: {
+    backgroundColor: '#f59e0b', // Add background color for active tab
   },
   iconContainer: {
     width: 100,
