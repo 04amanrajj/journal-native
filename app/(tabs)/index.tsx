@@ -8,9 +8,10 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import {  GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import JournalFetcher from "@/components/JournalFetcher";
 import Icon from "react-native-vector-icons/FontAwesome"; // Import the icon library
+import { Link, router } from "expo-router";
 
 export default function Home() {
 
@@ -203,7 +204,7 @@ export default function Home() {
               <Text style={styles.quoteAuthor}>— Jim Rohn</Text>
             </View>
 
-            <TouchableOpacity style={styles.feelingButton} onPress={() => { }}>
+            <TouchableOpacity style={styles.feelingButton} onPress={() => { router.push("/create") }}>
               <Text style={styles.feelingButtonText}>
                 How are you feeling today?
               </Text>
@@ -229,18 +230,7 @@ export default function Home() {
           </View>
 
           <View style={styles.memoryDetails}>
-            <JournalFetcher
-              onData={(data) => {
-                if (Array.isArray(data)) {
-                  const validJournals = data.filter((journal) => {
-                    return journal.date && !isNaN(new Date(journal.date).getTime());
-                  });
-                  setJournals(validJournals);
-                } else {
-                  console.error("Invalid data received from JournalFetcher:", data);
-                }
-              }}
-            />
+            <JournalFetcher />
             <View>
               {selectedMemories.slice(-3).map((journal, index) => {
                 return (
