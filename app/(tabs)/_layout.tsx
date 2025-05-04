@@ -1,11 +1,52 @@
+import React, { useState, useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import React from 'react';
-import CustomTabBar from '@/components/CustomTabBar'; // we'll create this
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import CustomTabBar from '@/components/CustomTabBar';
+import LoadingScreen from '@/components/LoadingScreen';
+import { FontAwesome5 } from '@expo/vector-icons';
 
-export default function TabLayout() {
+const TabLayout: React.FC = () => {
   const colorScheme = useColorScheme();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  const validateToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      const response = await axios.get('https://journal-app-backend-kxqs.onrender.com/user', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setIsLoggedIn(true);
+      } else {
+        await AsyncStorage.removeItem('authToken');
+        setIsLoggedIn(false);
+      }
+    } catch (error: any) {
+      console.error('Token validation error:', error);
+      await AsyncStorage.removeItem('authToken');
+      setIsLoggedIn(false);
+    }
+  };
+
+  useEffect(() => {
+    validateToken();
+  }, []);
+
+  if (isLoggedIn === null) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Tabs
@@ -15,11 +56,31 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
       }}
     >
-      <Tabs.Screen name="profile" options={{ title: 'Login' }} />
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
       <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
       <Tabs.Screen name="create" options={{ title: 'Create' }} />
-      {/* <Tabs.Screen name="about-me" options={{ title: 'About me' }} /> */}
+      <Tabs.Screen
+        name="auth"
+        options={{
+          title: 'Login',
+          href: isLoggedIn ? null : '/(tabs)/auth', // Hide auth tab when logged in
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="sign-in-alt" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: isLoggedIn ? 'Profile' : 'Login',
+          href: '/(tabs)/profile',
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name={isLoggedIn ? 'user' : 'sign-in-alt'} size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
-}
+};
+
+export default TabLayout;

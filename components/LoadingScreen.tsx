@@ -1,32 +1,26 @@
-// components/LoadingScreen.tsx
-import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-
-interface LoadingScreenProps {
-    redirectTo: string;
-}
-
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ redirectTo }) => {
-    React.useEffect(() => {
-        // Simulate redirection logic
-        console.log(`Redirecting to ${redirectTo}`);
-    }, [redirectTo]);
-
-    return (
-        <View style={styles.container}>
-            <Text>Loading...</Text>
-            <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-    );
+const LoadingScreen: React.FC = () => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Loading...</Text>
+    </View>
+  );
 };
 
-export default LoadingScreen;
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FFF9E6', // or your theme background
-    },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FBBF24',
+  },
+  text: {
+    fontSize: 18,
+    color: '#000',
+    fontWeight: '600',
+  },
 });
+
+export default LoadingScreen;
