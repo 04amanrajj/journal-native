@@ -9,7 +9,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
     <View style={styles.wrapper}>
       <BlurView intensity={90} tint="light" style={styles.blurContainer}>
         {state.routes
-          .filter((route) => route.name !== 'auth' && route.name !== 'about-me') // Exclude 'auth' and 'about-me'
+          .filter((route) => route.name !== 'auth' && route.name !== 'aboutme') // Exclude 'auth' and 'aboutme'
           .map((route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
