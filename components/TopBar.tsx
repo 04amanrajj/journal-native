@@ -4,8 +4,22 @@ import { Image } from 'react-native';
 import { View, Text, StyleSheet } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { Button } from "react-native";
+import {
+    Actionsheet,
+    ActionsheetBackdrop,
+    ActionsheetContent,
+    ActionsheetDragIndicator,
+    ActionsheetDragIndicatorWrapper,
+    ActionsheetItem,
+    ActionsheetItemText,
+    ActionsheetIcon,
+} from '@/components/ui/actionsheet';
+import { Link } from 'expo-router';
 
 const TopBar = () => {
+    const [showActionsheet, setShowActionsheet] = React.useState(false)
+    const handleClose = () => setShowActionsheet(false)
     const [showMenu, setShowMenu] = useState(false);
     const currentDate = new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -21,7 +35,7 @@ const TopBar = () => {
                 <Text style={styles.dateText}>{currentDate}</Text>
             </View>
 
-            <TouchableOpacity onPress={() => setShowMenu(prev => !prev)}>
+            <TouchableOpacity onPress={() => setShowActionsheet(true)}>
                 <Image
                     source={{
                         uri: "https://storage.googleapis.com/a1aa/image/399c1188-8f92-43f0-9923-879989cbe663.jpg",
@@ -30,21 +44,30 @@ const TopBar = () => {
                 />
             </TouchableOpacity>
 
-            {showMenu && (
-                <View style={styles.menu}>
-                    <BlurView intensity={50} style={{ borderRadius: 8 }}>
-                        <TouchableOpacity onPress={() => console.log('Profile pressed')}>
-                            <Text style={styles.menuItem}>Profile</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => console.log('Settings pressed')}>
-                            <Text style={styles.menuItem}>Settings</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => console.log('Logout pressed')}>
-                            <Text style={styles.menuItem}>Logout</Text>
-                        </TouchableOpacity>
-                    </BlurView>
-                </View>
-            )}
+            <Actionsheet isOpen={showActionsheet} onClose={handleClose}>
+                <ActionsheetBackdrop />
+                <ActionsheetContent>
+                    <ActionsheetDragIndicatorWrapper>
+                        <ActionsheetDragIndicator />
+                    </ActionsheetDragIndicatorWrapper>
+                    <ActionsheetItem onPress={handleClose}>
+                        <Link href={'/(tabs)/profile'}>Visit profile</Link>
+                    </ActionsheetItem>
+                    <ActionsheetItem onPress={handleClose}>
+                        <Link href={'/(tabs)/auth'} style={{ width: '200%' }}>
+                            <Text>signup</Text>
+                        </Link>
+                    </ActionsheetItem>
+                    <ActionsheetItem onPress={handleClose}>
+                        <Link href={'/(tabs)/aboutme'}>about me</Link>
+                    </ActionsheetItem>
+                    <ActionsheetItem isDisabled onPress={handleClose}>
+                        <ActionsheetItemText>Delete</ActionsheetItemText>
+                    </ActionsheetItem>
+                </ActionsheetContent>
+            </Actionsheet>
+
+
         </View>
 
     );
