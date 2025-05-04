@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, use } from "react";
 import TopBar from "@/components/TopBar";
 import {
   View,
@@ -12,10 +12,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import JournalFetcher from "@/components/JournalFetcher";
 import Icon from "react-native-vector-icons/FontAwesome"; // Import the icon library
 import { Link, router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 export default function Home() {
-
-
   const getGreeting = () => {
     const currentHour = new Date().getHours();
     if (currentHour < 12) {
@@ -27,9 +27,32 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const fetchJournals = async () => {
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+        const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Response from server:", response.data);
+        setJournals(response.data);
+      } catch (error) {
+        console.error("Error fetching journals:", error);
+      }
+    };
+
+    fetchJournals();
+  }
+    , []);
+  // Function to calculate stats
+
+
   const calculateStats = (journals: any[]) => {
     const totalEntries = journals.length;
-    const uniqueDays = new Set(journals.map((journal) => new Date(journal.date).toDateString())).size;
+    const uniqueDays = new Set(journals.map((journal) => new Date(journal.created_at).toDateString())).size;
     const bestStreak = calculateBestStreak(journals); // Replace with your streak calculation logic
 
     return [
@@ -41,7 +64,7 @@ export default function Home() {
 
   const calculateBestStreak = (journals: any[]) => {
     // Example logic to calculate the best streak
-    const sortedDates = [...new Set(journals.map((journal) => new Date(journal.date).toDateString()))]
+    const sortedDates = [...new Set(journals.map((journal) => new Date(journal.created_at).toDateString()))]
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     let streak = 1;
@@ -78,8 +101,9 @@ export default function Home() {
     date.setDate(firstDayOfWeek.getDate() + idx);
 
     const hasJournal = journals.some((journal) => {
-      if (!journal.date) return false;
-      const journalDate = new Date(journal.date);
+      console.log("Journal date:", journal);
+      if (!journal.created_at) return false;
+      const journalDate = new Date(journal.created_at);
       return journalDate.toLocaleDateString("en-US") === date.toLocaleDateString("en-US");
     });
 
@@ -97,8 +121,8 @@ export default function Home() {
 
     // Filter journals for the selected date
     const filtered = journals.filter((journal) => {
-      if (!journal.date) return false; // Skip invalid entries
-      const journalDateStr = new Date(journal.date).toLocaleDateString("en-US"); // Normalize to YYYY-MM-DD format
+      if (!journal.created_at) return false; // Skip invalid entries
+      const journalDateStr = new Date(journal.created_at).toLocaleDateString("en-US"); // Normalize to YYYY-MM-DD format
       return journalDateStr === selectedDateStr;
     });
 
@@ -110,10 +134,6 @@ export default function Home() {
     setSelectedDate(selectedDateStr);
     setSelectedMemories(filtered);
   };
-
-
-
-
 
   const stats = calculateStats(journals);
 
@@ -149,8 +169,8 @@ export default function Home() {
                         ? "#F9A825"
                         : item.hasJournal
                           ? "#A5D6A7" // Green background if journal exists
-                          : "#FFFFFF",
-                      borderWidth: 1,
+                          : "#EF9A9A",
+                      borderWidth: 0,
                       borderColor: "#E0E0E0",
                     },
                   ]}
@@ -239,7 +259,7 @@ export default function Home() {
                       <Text style={styles.journalTitle}>{journal.title}</Text>
                       <Text style={styles.journalText}>{journal.text}</Text>
                       <Text style={styles.journalDate}>
-                        {new Date(journal.date).toLocaleDateString("en-US", {
+                        {new Date(journal.created_at).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "2-digit",
                           day: "2-digit",
@@ -258,6 +278,37 @@ export default function Home() {
 };
 
 const styles = StyleSheet.create({
+  notification: {
+    backgroundColor: '#F9A825',
+    borderRadius: 12,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  notificationPopup: {
+    minWidth: '90%',
+    width: '100%',
+    padding: 8,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    top: 50,
+    alignSelf: 'center',
+    zIndex: 10,
+    flexDirection: 'row',
+  },
+  notificationText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: "#FFF9E6",

@@ -4,17 +4,17 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import axios, { AxiosError } from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoadingScreen from '@/components/LoadingScreen';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
+import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 
-const login = () => {
+const auth = () => {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [response, setResponse] = React.useState('');
     const [loading, setLoading] = React.useState(false);
     const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-
-
-
-
 
     React.useEffect(() => {
         const checkAuthStatus = async () => {
@@ -31,36 +31,52 @@ const login = () => {
         checkAuthStatus();
     }, []);
 
-    if (isLoggedIn) {
-        return (
-            <LoadingScreen redirectTo="/profile" />
-        );
-    }
+
+
+    const toast = useToast();
+    const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        toast.show({
+            placement: "top",
+            duration: 3000,
+            render: ({ id }) => {
+                const uniqueToastId = "toast-" + id;
+                return (
+                    <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                        <View style={styles.notification}>
+                            <Icon name={icon} size={24} color="white" />
+                        </View>
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                            <ToastDescription style={styles.notificationDescription}>
+                                {description}
+                            </ToastDescription>
+                        </View>
+                    </Toast>
+                );
+            },
+        });
+    };
 
     async function handleSignIn() {
+        setLoading(true);
         try {
-            const response = await axios.post('https://journal-app-backend-kxqs.onrender.com/user/login', {
+            const res = await axios.post('https://journal-app-backend-kxqs.onrender.com/user/login', {
                 email,
                 password,
             });
-            await AsyncStorage.setItem('authToken', response.data.token);
-            setResponse(response.data.message || 'Login successful!');
-            console.log('Login successful:', response.data);
-        } catch (error: unknown) {
-            let errorMessage = 'An error occurred';
 
-            if (axios.isAxiosError(error)) {
-                // Axios error with response from backend
-                errorMessage = error.response?.data?.message || error.message || errorMessage;
-            } else if (error instanceof Error) {
-                // Generic JS error
-                errorMessage = error.message;
-            }
-
-            setResponse(errorMessage);
-            console.error('Error during Login:', error);
+            const { token } = res.data;
+            await AsyncStorage.setItem('authToken', token);
+            setResponse('Login successful!');
+            router.replace('/(tabs)/profile'); // Redirect to profile screen after login
+        } catch (error: any) {
+            console.error('Login error:', error);
+            setResponse(error.response?.data?.message || 'Login failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
 
 
@@ -96,20 +112,32 @@ const login = () => {
                     value={password}
                     onChangeText={setPassword}
                 />
-                <TouchableOpacity onPress={() => console.log('Forgot Password pressed')}>
+                <TouchableOpacity onPress={() =>
+                    showToast({
+                        title: "Feature Coming Soon",
+                        description: "This feature is still in development.",
+                        icon: "clock-o",
+                    })
+                }>
                     <Text style={styles.forgotPassword}>Forgot Password?</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.signInButton}
                     onPress={handleSignIn}
                 >
-                    <Text style={styles.signInButtonText}>Sign In</Text>
+                    <Text style={styles.signInButtonText}>{loading ? 'Logging in...' : 'Login'}</Text>
                 </TouchableOpacity>
 
                 {/* Social Buttons */}
                 <TouchableOpacity
                     style={styles.socialButton}
-                    onPress={() => console.log('Continue with Google pressed')}
+                    onPress={() =>
+                        showToast({
+                            title: "Feature Coming Soon",
+                            description: "This feature is still in development.",
+                            icon: "clock-o",
+                        })
+                    }
                 >
                     <FontAwesome5 name="google" size={20} color="black" />
                     <Text style={styles.socialButtonText}>Continue with Google</Text>
@@ -118,7 +146,13 @@ const login = () => {
 
                 <TouchableOpacity
                     style={styles.socialButton}
-                    onPress={() => console.log('Continue with Facebook pressed')}
+                    onPress={() =>
+                        showToast({
+                            title: "Feature Coming Soon",
+                            description: "This feature is still in development.",
+                            icon: "clock-o",
+                        })
+                    }
                 >
                     <FontAwesome5 name="facebook" size={20} color="black" />
                     <Text style={styles.socialButtonText}>Continue with Facebook</Text>
@@ -130,7 +164,13 @@ const login = () => {
                         Don't have an account?{' '}
                         <Text
                             style={{ fontWeight: '700' }}
-                            onPress={() => console.log('Register pressed')}
+                            onPress={() =>
+                                showToast({
+                                    title: "Feature Coming Soon",
+                                    description: "This feature is still in development.",
+                                    icon: "clock-o",
+                                })
+                            }
                         >
                             Register
                         </Text>
@@ -148,6 +188,48 @@ const login = () => {
 }
 
 const styles = StyleSheet.create({
+    notification: {
+        backgroundColor: '#F9A825',
+        borderRadius: 12,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 0,
+    },
+    notificationPopup: {
+        minWidth: '90%',
+        width: '100%',
+        padding: 12,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        top: 50,
+        alignSelf: 'center',
+        zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    notificationText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
+    notificationDescription: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
     container: {
         flex: 1,
         backgroundColor: '#FBBF24', // bg-yellow-400
@@ -261,4 +343,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default login;
+export default auth;

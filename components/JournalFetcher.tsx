@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
+import * as Haptics from 'expo-haptics';
 
 interface Journal {
     id: number;
@@ -24,9 +27,18 @@ const JournalFetcher = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
+
+                showToast({
+                    title: "Journals Fetched",
+                    description: "Your journal entries have been fetched successfully.",
+                    icon: "check",
+                });
+
                 setJournals(response.data);
             } catch (error) {
                 console.error("Error fetching journals:", error);
+                setJournals([]);
+
             } finally {
                 setLoading(false);
             }
@@ -34,6 +46,31 @@ const JournalFetcher = () => {
 
         fetchJournals();
     }, []);
+
+    const toast = useToast();
+    const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        toast.show({
+          placement: "top",
+          duration: 3000,
+          render: ({ id }) => {
+            const uniqueToastId = "toast-" + id;
+            return (
+              <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                <View style={styles.notification}>
+                  <Icon name={icon} size={24} color="white" />
+                </View>
+                <View style={{ paddingHorizontal: 10 }}>
+                  <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                  <ToastDescription style={styles.notificationDescription}>
+                    {description}
+                  </ToastDescription>
+                </View>
+              </Toast>
+            );
+          },
+        });
+      };
 
     if (loading) {
         return <Text style={styles.loadingText}>Loading journals...</Text>;
@@ -65,6 +102,48 @@ const JournalFetcher = () => {
 };
 
 const styles = StyleSheet.create({
+    notification: {
+        backgroundColor: '#F9A825',
+        borderRadius: 12,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 0,
+    },
+    notificationPopup: {
+        minWidth: '90%',
+        width: '100%',
+        padding: 12,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        top: 50,
+        alignSelf: 'center',
+        zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    notificationText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
+    notificationDescription: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
     loadingText: {
         textAlign: "center",
         marginTop: 20,

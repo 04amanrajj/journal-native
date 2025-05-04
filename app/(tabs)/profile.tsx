@@ -1,41 +1,216 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Switch, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Notification from '@/components/Notification'; // Import the Notification component
+import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Link, useRouter, useFocusEffect } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import axios from 'axios';
 
+const ProfileScreen: React.FC = () => {
+  const toast = useToast();
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-
-
-
-const profileScreen: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
-  const [showNotification, setShowNotification] = useState(false); // State to control notification visibility
-
-  const toggleSwitch = () => setIsDarkMode((previousState) => !previousState);
-
-  const handleLogout = () => {
-    setShowNotification(false); // Hide the notification first
-
-    // ConfirmationModal.show({
-    //   title: 'Log Out',
-    //   message: 'Are you sure you want to log out?',
-    //   onConfirm: () => {
-    //     // Handle logout logic here
-    //     console.log('Logged out');
-    //     setShowNotification(false); // Hide the notification after logout
-    //   },
-    // });
-
-
-    setTimeout(() => {
-      setShowNotification(true); // Show the notification after a small delay
-    }, 100); // Add a 100ms delay
+  const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    toast.show({
+      placement: "top",
+      duration: 3000,
+      render: ({ id }) => {
+        const uniqueToastId = "toast-" + id;
+        return (
+          <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+            <View style={styles.notification}>
+              <Icon name={icon} size={24} color="white" />
+            </View>
+            <View style={{ paddingHorizontal: 10 }}>
+              <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+              <ToastDescription style={styles.notificationDescription}>
+                {description}
+              </ToastDescription>
+            </View>
+          </Toast>
+        );
+      },
+    });
   };
+
+  const validateToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        setIsAuthenticated(false);
+        showToast({
+          title: "Session Expired",
+          description: "Please log in to continue.",
+          icon: "exclamation-circle",
+        });
+        return false;
+      }
+
+      // Validate token by making a lightweight API call
+      const response = await axios.get('https://journal-app-backend-kxqs.onrender.com/user', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.status === 200;
+    } catch (error: any) {
+      console.error('Token validation error:', error);
+      await AsyncStorage.removeItem('authToken');
+      setIsAuthenticated(false);
+      showToast({
+        title: "Session Expired",
+        description: "Please log in to continue.",
+        icon: "exclamation-circle",
+      });
+      return false;
+    }
+  };
+
+  const fetchUserDetails = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      const response = await axios.get('https://journal-app-backend-kxqs.onrender.com/user', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = response.data;
+      console.log(data);
+      setUsername(data.user.name || 'Unknown User');
+      setEmail(data.user.email || 'No email provided');
+      setPhone(data.user.phone || 'No phone provided');
+      setIsAuthenticated(true);
+
+      showToast({
+        title: "Profile Loaded",
+        description: "Your details are ready to view!",
+        icon: "check-circle",
+      });
+    } catch (error: any) {
+      console.error('Error fetching user details:', error);
+      if (error.response && (error.response.status === 401 || error.response.status === 404)) {
+        await AsyncStorage.removeItem('authToken');
+        setIsAuthenticated(false);
+        showToast({
+          title: "Session Expired",
+          description: "Please log in to continue.",
+          icon: "exclamation-circle",
+        });
+      } else {
+        showToast({
+          title: "Oops, Something Went Wrong",
+          description: "Please try again later.",
+          icon: "exclamation-circle",
+        });
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    const token = await AsyncStorage.getItem('authToken');
+    try {
+      await axios.post(
+        "https://journal-app-backend-kxqs.onrender.com/user/logout",
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await AsyncStorage.removeItem('authToken');
+      setIsAuthenticated(false);
+      showToast({
+        title: "Signed Out",
+        description: "You're now logged out. Come back soon!",
+        icon: "sign-out",
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      showToast({
+        title: "Oops, Something Went Wrong",
+        description: "Please try again later.",
+        icon: "exclamation-circle",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const token = await AsyncStorage.getItem('authToken');
+    try {
+      await axios.delete('https://journal-app-backend-kxqs.onrender.com/user', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      await AsyncStorage.removeItem('authToken');
+      setIsAuthenticated(false);
+      showToast({
+        title: "Account Removed",
+        description: "Your account has been successfully deleted.",
+        icon: "trash",
+      });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      showToast({
+        title: "Oops, Something Went Wrong",
+        description: "Please try again later.",
+        icon: "exclamation-circle",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      validateToken();
+    }, [])
+  );
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      router.replace('/(tabs)/auth');
+    }
+  }, [isAuthenticated]);
+
+  if (isAuthenticated === null) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView>
         <View style={styles.card}>
           {/* Header Section */}
           <View style={styles.header}>
@@ -50,7 +225,7 @@ const profileScreen: React.FC = () => {
               source={{ uri: 'https://storage.googleapis.com/a1aa/image/1a98223e-ed3c-4575-bca2-5503e93b72e0.jpg' }}
               style={styles.profileImage}
             />
-            <Text style={styles.profileName}>Leslie Alexander</Text>
+            <Text style={styles.profileName}>{username}</Text>
             <Text style={styles.profileRole}>Web Designer</Text>
             <Text style={styles.profileLocation}>London</Text>
             <TouchableOpacity style={styles.changePhotoButton}>
@@ -59,24 +234,11 @@ const profileScreen: React.FC = () => {
           </View>
           {/* Settings List */}
           <View style={styles.settingsList}>
-            {/* Dark Mode */}
-            <View style={styles.settingItem}>
-              <View style={styles.settingLeft}>
-                <Icon name="moon-o" size={16} color="#000000" />
-                <Text style={styles.settingText}>Dark mode</Text>
-              </View>
-              <Switch
-                trackColor={{ false: '#FFECB3', true: '#000000' }}
-                thumbColor="#FFFFFF"
-                onValueChange={toggleSwitch}
-                value={isDarkMode}
-              />
-            </View>
             {/* Name */}
             <TouchableOpacity style={styles.settingItem}>
               <View style={styles.settingLeft}>
                 <Icon name="user" size={16} color="#FFC107" />
-                <Text style={styles.settingText}>Name</Text>
+                <Text style={styles.settingText}>{username}</Text>
               </View>
               <Icon name="chevron-right" size={16} color="#000000" />
             </TouchableOpacity>
@@ -84,7 +246,7 @@ const profileScreen: React.FC = () => {
             <TouchableOpacity style={styles.settingItem}>
               <View style={styles.settingLeft}>
                 <Icon name="phone" size={16} color="#FFC107" />
-                <Text style={styles.settingSubText}>(480) 555-0103</Text>
+                <Text style={styles.settingSubText}>{phone}</Text>
               </View>
               <Icon name="chevron-right" size={16} color="#000000" />
             </TouchableOpacity>
@@ -92,12 +254,21 @@ const profileScreen: React.FC = () => {
             <TouchableOpacity style={styles.settingItem}>
               <View style={styles.settingLeft}>
                 <Icon name="envelope" size={16} color="#FFC107" />
-                <Text style={styles.settingSubText}>leslie@sample.com</Text>
+                <Text style={styles.settingSubText}>{email}</Text>
               </View>
               <Icon name="chevron-right" size={16} color="#000000" />
             </TouchableOpacity>
             {/* Change Password */}
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() =>
+                showToast({
+                  title: "Feature Coming Soon",
+                  description: "This feature is still in development.",
+                  icon: "clock-o",
+                })
+              }
+            >
               <View style={styles.settingLeft}>
                 <Icon name="shield" size={16} color="#FFC107" />
                 <Text style={styles.settingText}>Change password</Text>
@@ -105,7 +276,16 @@ const profileScreen: React.FC = () => {
               <Icon name="chevron-right" size={16} color="#000000" />
             </TouchableOpacity>
             {/* Privacy & Data */}
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => {
+                showToast({
+                  title: "Your Data is Protected",
+                  description: "Used advanced encryption to keep your data safe.",
+                  icon: "lock",
+                });
+              }}
+            >
               <View style={styles.settingLeft}>
                 <Icon name="lock" size={16} color="#000000" />
                 <Text style={styles.settingText}>Privacy & Data</Text>
@@ -113,20 +293,20 @@ const profileScreen: React.FC = () => {
               <Icon name="chevron-right" size={16} color="#000000" />
             </TouchableOpacity>
             {/* About */}
-            <TouchableOpacity style={styles.settingItem}>
-              <View style={styles.settingLeft}>
-                <Icon name="info-circle" size={16} color="#000000" />
-                <Text style={styles.settingText}>About</Text>
-              </View>
-              <Icon name="chevron-right" size={16} color="#000000" />
+            <TouchableOpacity>
+              <Link href={'/(tabs)/aboutme'} style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <Icon name="info-circle" size={16} color="#000000" />
+                  <Text style={styles.settingText}>About</Text>
+                </View>
+              </Link>
             </TouchableOpacity>
             {/* Log Out and Delete Account Buttons */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
               {/* Delete Account Button */}
-              <TouchableOpacity style={styles.deleteAccountButton}>
+              <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
                 <Text style={styles.deleteAccountText}>Delete Account</Text>
               </TouchableOpacity>
-
               {/* Log Out Button */}
               <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                 <Text style={styles.logoutText}>Log out</Text>
@@ -135,30 +315,73 @@ const profileScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-
-      {/* Notification Component */}
-      {showNotification && <Notification />}
     </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
+  notification: {
+    backgroundColor: '#F9A825',
+    borderRadius: 12,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 0,
+  },
+  notificationPopup: {
+    minWidth: '90%',
+    width: '100%',
+    padding: 12,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    top: 50,
+    alignSelf: 'center',
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'left',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  notificationDescription: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'left',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FFC107', // Yellow background
+    backgroundColor: '#FFC107',
     height: '100%',
     marginTop: 40,
   },
-  scrollContent: {
+  loadingText: {
+    fontSize: 18,
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 50,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderEndEndRadius: 24,
-    borderStartEndRadius: 24,
+    borderEndEndRadius: 40,
+    borderStartEndRadius: 40,
     overflow: 'hidden',
   },
   header: {
-    backgroundColor: '#000000', // Black header
+    backgroundColor: '#000000',
     padding: 24,
     position: 'relative',
   },
@@ -176,7 +399,7 @@ const styles = StyleSheet.create({
   profileSection: {
     alignItems: 'center',
     paddingVertical: 16,
-    backgroundColor: '#000000', // Black profile section
+    backgroundColor: '#000000',
   },
   profileImage: {
     width: 80,
@@ -203,7 +426,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   changePhotoButton: {
-    backgroundColor: '#FFC107', // Yellow button
+    backgroundColor: '#FFC107',
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -222,7 +445,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#FFECB3', // Light yellow border
+    borderBottomColor: '#FFECB3',
   },
   settingLeft: {
     flexDirection: 'row',
@@ -231,47 +454,43 @@ const styles = StyleSheet.create({
   },
   settingText: {
     color: '#000000',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '600',
+    width: '100%',
   },
   settingSubText: {
     color: '#000000',
-    fontSize: 12,
-    opacity: 0.7,
-  },
-  settingStatus: {
-    color: '#000000',
-    fontSize: 12,
+    fontSize: 16,
     opacity: 0.7,
   },
   logoutButton: {
-    backgroundColor: '#000000', // Black background
+    backgroundColor: '#000000',
     paddingVertical: 14,
     borderRadius: 24,
     alignItems: 'center',
     flex: 1,
-    marginLeft: 8, // Add spacing between buttons
+    marginLeft: 8,
   },
   logoutText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '600',
   },
   deleteAccountButton: {
-    backgroundColor: '#FFFFFF', // White background
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#FF0000', // Red outline
+    borderColor: '#FF0000',
     paddingVertical: 14,
     borderRadius: 24,
     alignItems: 'center',
     flex: 1,
-    marginRight: 8, // Add spacing between buttons
+    marginRight: 8,
   },
   deleteAccountText: {
-    color: '#FF0000', // Red text
-    fontSize: 12,
+    color: '#FF0000',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
 
-export default profileScreen;
+export default ProfileScreen;

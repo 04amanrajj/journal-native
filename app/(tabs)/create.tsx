@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, FontAwesome, Feather } from '@expo/vector-icons'; // using Expo's vector icons
+import { FontAwesome, Feather } from '@expo/vector-icons'; // using Expo's vector icons
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Notification from '@/components/Notification'; // Import the Notification component
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import axios from 'axios';
+import * as Haptics from 'expo-haptics';
 
 export default function NewJournalScreen() {
   const [showNotification, setShowNotification] = useState(false); // Control notification visibility
@@ -18,8 +20,41 @@ export default function NewJournalScreen() {
     day: "numeric",
   });
 
+  const toast = useToast();
+  const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    toast.show({
+      placement: "top",
+      duration: 3000,
+      render: ({ id }) => {
+        const uniqueToastId = "toast-" + id;
+        return (
+          <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+            <View style={styles.notification}>
+              <Icon name={icon} size={24} color="white" />
+            </View>
+            <View style={{ paddingHorizontal: 10 }}>
+              <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+              <ToastDescription style={styles.notificationDescription}>
+                {description}
+              </ToastDescription>
+            </View>
+          </Toast>
+        );
+      },
+    });
+  };
+
+
   const handleSaveJournal = async () => {
-    if (title.trim() === "" && text.trim() === "") return;
+    if (title.trim() === "" && text.trim() === "") {
+      showToast({
+        title: "Empty Entry",
+        description: "Please write something before saving.",
+        icon: "exclamation-triangle",
+      });
+      return;
+    }
 
     const newEntry = {
       title: title.trim(),
@@ -38,9 +73,21 @@ export default function NewJournalScreen() {
 
       console.log('Response from server:', response.data);
       console.log('Journal saved!');
-      setShowNotification(true); // Show the notification
+
+      showToast({
+        title: "Journal Saved",
+        description: "Your journal entry has been saved successfully.",
+        icon: "check",
+      });
+
+  
     } catch (error) {
       console.error('Error saving journal:', error);
+      showToast({
+        title: "Error Saving Journal",
+        description: "There was an error saving your journal entry.",
+        icon: "exclamation-triangle",
+      });
     }
   };
 
@@ -51,7 +98,7 @@ export default function NewJournalScreen() {
         <StatusBar style="dark" />
 
         {/* Notification Popup */}
-        {showNotification && <Notification />}
+
 
         {/* Header */}
         <View style={styles.header}>
@@ -132,6 +179,48 @@ export default function NewJournalScreen() {
 }
 
 const styles = StyleSheet.create({
+  notification: {
+    backgroundColor: '#F9A825',
+    borderRadius: 12,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 0,
+  },
+  notificationPopup: {
+    minWidth: '90%',
+    width: '100%',
+    padding: 12,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    top: 50,
+    alignSelf: 'center',
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'left',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  notificationDescription: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'left',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
   container: {
     flex: 1,
     backgroundColor: "#FFF9E6",
