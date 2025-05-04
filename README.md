@@ -1,28 +1,52 @@
-# Welcome to Journal Native 👋
+# Journal Native
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Journal Native is a hobby project turned public, offering a secure, mobile-only platform for journaling. With its sleek, modern UI, the app makes it easy to write and store your personal entries, allowing you to relive cherished memories whenever you want. Built with care, it ensures your thoughts are safely preserved and accessible on the go.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Secure Storage**: Journal entries are safely stored in a secure cloud.
+- **Mobile-Only Experience**: Optimized for iOS and Android with a modern UI.
+- **User Authentication**: Log in to protect and access your personal journals.
+- **Haptic Feedback**: Enhances interaction with tactile responses.
+- **Journal Management**: Easily create, store, and retrieve entries to revisit memories.
 
+## Tech Stack
+
+- **Framework**: React Native with Expo
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS (NativeWind), GlueStack UI
+- **Navigation**: Expo Router
+- **Build Tools**: Expo CLI, Metro Bundler
+- **Haptic Feedback**: expo Haptics
+
+## Getting Started
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/04amanrajj/journal-native.git
+   cd journal-native
+   ```
+
+2. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. **Run the App**:
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Build for Production**:
+   Use EAS for building and deploying:
+   ```bash
+   eas build -p android
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Contributing
 
-### Simply download apk from release tab
+Contributions are welcome! Please open an issue or submit a pull request for bug fixes, features, or improvements. Ensure code follows the existing TypeScript and Tailwind conventions.
 
-made with ❤️ by Aman Raj 🧑‍💻
+## Credits
+
+**Made by Aman with ❤️**
