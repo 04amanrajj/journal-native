@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { useFocusEffect } from "@react-navigation/native";
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import {
     faChevronLeft,
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import JournalFetcher from "@/components/JournalFetcher";
+import * as Haptics from 'expo-haptics';
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
-import { Link } from "expo-router";
-import { ThemedText } from "@/components/ThemedText";
+
 
 const months = [
     "Jan",
@@ -91,6 +92,31 @@ const explore = () => {
         return days;
     }, [currentDate, selectedDay]);
 
+    const toast = useToast();
+    const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        toast.show({
+          placement: "top",
+          duration: 3000,
+          render: ({ id }) => {
+            const uniqueToastId = "toast-" + id;
+            return (
+              <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                <View style={styles.notification}>
+                  <Icon name={icon} size={24} color="white" />
+                </View>
+                <View style={{ paddingHorizontal: 10 }}>
+                  <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                  <ToastDescription style={styles.notificationDescription}>
+                    {description}
+                  </ToastDescription>
+                </View>
+              </Toast>
+            );
+          },
+        });
+      };
+
     return (
         <GestureHandlerRootView>
             <View style={styles.container}>
@@ -153,6 +179,48 @@ const explore = () => {
 };
 
 const styles = StyleSheet.create({
+    notification: {
+        backgroundColor: '#F9A825',
+        borderRadius: 12,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 0,
+    },
+    notificationPopup: {
+        minWidth: '90%',
+        width: '100%',
+        padding: 12,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        top: 50,
+        alignSelf: 'center',
+        zIndex: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    notificationText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
+    notificationDescription: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'left',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+    },
     container: {
         flex: 1,
         backgroundColor: "#FFF9E6",
