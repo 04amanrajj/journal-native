@@ -29,6 +29,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
     const router = useRouter();
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
+    const [showPassword, setShowPassword] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
 
     const toast = useToast();
@@ -74,6 +75,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
             });
             return;
         }
+
         setLoading(true);
         try {
             const res = await axios.post(
@@ -86,9 +88,44 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
 
             const { token } = res.data;
             await AsyncStorage.setItem("authToken", token);
-            onAuthSuccess();
+
+            showToast({
+                title: "Login Successful",
+                description: "Welcome back! Redirecting...",
+                icon: "check-circle",
+            });
+
+            // Add a small delay to show the success message
+            setTimeout(() => {
+                onAuthSuccess();
+            }, 1000);
         } catch (error: any) {
             console.error("Login error:", error);
+
+            // Handle different types of errors
+            if (error.response) {
+                // Server responded with an error
+                const errorMessage = error.response.data?.error || "Invalid credentials";
+                showToast({
+                    title: "Login Failed",
+                    description: errorMessage,
+                    icon: "exclamation-circle",
+                });
+            } else if (error.request) {
+                // No response received
+                showToast({
+                    title: "Connection Error",
+                    description: "Please check your internet connection.",
+                    icon: "wifi",
+                });
+            } else {
+                // Other errors
+                showToast({
+                    title: "Error",
+                    description: "Something went wrong. Please try again.",
+                    icon: "exclamation-circle",
+                });
+            }
         } finally {
             setLoading(false);
         }
@@ -105,23 +142,40 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
             </View>
             {/* Form Section */}
             <View style={styles.formContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="none"
-                    value={email}
-                    onChangeText={setEmail}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    secureTextEntry
-                    autoCapitalize="none"
-                    value={password}
-                    onChangeText={setPassword}
-                />
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.emailInput]}
+                        placeholder="Email"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+                    <View style={styles.inputIcon}>
+                        <FontAwesome5 name="envelope" size={20} color="#9CA3AF" />
+                    </View>
+                </View>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.passwordInput]}
+                        placeholder="Password"
+                        placeholderTextColor="#9CA3AF"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        value={password}
+                        onChangeText={setPassword}
+                    />
+                    <TouchableOpacity
+                        style={styles.inputIcon}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <FontAwesome5
+                            name={showPassword ? "eye-slash" : "eye"}
+                            size={20}
+                            color="#9CA3AF"
+                        />
+                    </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                     onPress={() =>
                         showToast({
@@ -253,7 +307,7 @@ const styles = StyleSheet.create({
     },
     coverImage: {
         width: "100%",
-        height: 150,
+        height: 180,
         borderRadius: 16,
         marginTop: 24,
         alignSelf: "center",
@@ -285,14 +339,14 @@ const styles = StyleSheet.create({
     registerText: {
         color: "black",
         fontSize: 16,
-        paddingTop: 40,
+        paddingTop: 20,
         fontWeight: "400",
     },
     formContainer: {
         flex: 1,
         backgroundColor: "white",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
         paddingHorizontal: 24,
         paddingTop: 32,
         paddingBottom: 24,
@@ -302,21 +356,35 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 5,
     },
+    inputContainer: {
+        position: 'relative',
+        marginBottom: 16,
+    },
     input: {
         backgroundColor: "#F3F4F6",
         borderRadius: 9999,
         paddingVertical: 12,
         paddingHorizontal: 20,
-        marginBottom: 16,
         fontSize: 14,
         color: "#9CA3AF",
+    },
+    emailInput: {
+        paddingRight: 50,
+    },
+    passwordInput: {
+        paddingRight: 50,
+    },
+    inputIcon: {
+        position: 'absolute',
+        right: 20,
+        top: '50%',
+        transform: [{ translateY: -10 }],
     },
     forgotPassword: {
         textAlign: "right",
         color: "black",
         fontSize: 12,
         fontWeight: "400",
-        marginBottom: 16,
     },
     signInButton: {
         backgroundColor: "black",

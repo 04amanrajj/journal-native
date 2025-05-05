@@ -18,6 +18,8 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onShowAuth }) =>
     const [phone, setPhone] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [showPassword, setShowPassword] = React.useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [response, setResponse] = React.useState('');
 
@@ -121,50 +123,93 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onShowAuth }) =>
 
             {/* Form Section */}
             <View style={styles.formContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Username"
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="none"
-                    value={username}
-                    onChangeText={setUsername}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={setEmail}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Phone (optional)"
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="none"
-                    keyboardType="phone-pad"
-                    value={phone}
-                    onChangeText={setPhone}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    secureTextEntry
-                    autoCapitalize="none"
-                    value={password}
-                    onChangeText={setPassword}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#9CA3AF"
-                    secureTextEntry
-                    autoCapitalize="none"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                />
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.textInput]}
+                        placeholder="Full Name"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                        value={username}
+                        onChangeText={setUsername}
+                    />
+                    <View style={styles.inputIcon}>
+                        <FontAwesome5 name="user" size={20} color="#9CA3AF" />
+                    </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.textInput]}
+                        placeholder="Email"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+                    <View style={styles.inputIcon}>
+                        <FontAwesome5 name="envelope" size={20} color="#9CA3AF" />
+                    </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.textInput]}
+                        placeholder="Phone (optional)"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                        keyboardType="phone-pad"
+                        value={phone}
+                        onChangeText={setPhone}
+                    />
+                    <View style={styles.inputIcon}>
+                        <FontAwesome5 name="phone" size={20} color="#9CA3AF" />
+                    </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.textInput]}
+                        placeholder="Password"
+                        placeholderTextColor="#9CA3AF"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        value={password}
+                        onChangeText={setPassword}
+                    />
+                    <TouchableOpacity
+                        style={styles.inputIcon}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <FontAwesome5
+                            name={showPassword ? "eye-slash" : "eye"}
+                            size={20}
+                            color="#9CA3AF"
+                        />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[styles.input, styles.textInput]}
+                        placeholder="Confirm Password"
+                        placeholderTextColor="#9CA3AF"
+                        secureTextEntry={!showConfirmPassword}
+                        autoCapitalize="none"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                    />
+                    <TouchableOpacity
+                        style={styles.inputIcon}
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        <FontAwesome5
+                            name={showConfirmPassword ? "eye-slash" : "eye"}
+                            size={20}
+                            color="#9CA3AF"
+                        />
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                     style={styles.registerButton}
@@ -260,8 +305,8 @@ const styles = StyleSheet.create({
     formContainer: {
         flex: 1,
         backgroundColor: 'white',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
         paddingHorizontal: 24,
         paddingTop: 32,
         paddingBottom: 24,
@@ -271,14 +316,26 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 5,
     },
+    inputContainer: {
+        position: 'relative',
+        marginBottom: 16,
+    },
     input: {
         backgroundColor: '#F3F4F6',
         borderRadius: 9999,
         paddingVertical: 12,
         paddingHorizontal: 20,
-        marginBottom: 16,
         fontSize: 14,
         color: '#9CA3AF',
+    },
+    textInput: {
+        paddingRight: 50,
+    },
+    inputIcon: {
+        position: 'absolute',
+        right: 20,
+        top: '50%',
+        transform: [{ translateY: -10 }],
     },
     registerButton: {
         backgroundColor: 'black',
