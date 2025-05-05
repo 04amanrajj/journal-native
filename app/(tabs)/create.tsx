@@ -144,10 +144,24 @@ export default function NewJournalScreen() {
 
           {/* Bottom Icons */}
           <View style={styles.bottomIcons}>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton}
+             onPress={() =>
+              showToast({
+                  title: "Feature Coming Soon",
+                  description: "This feature is still in development.",
+                  icon: "clock-o",
+              })
+          }>
               <FontAwesome name="image" size={20} color="gray" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton}
+             onPress={() =>
+              showToast({
+                  title: "Feature Coming Soon",
+                  description: "This feature is still in development.",
+                  icon: "clock-o",
+              })
+          }>
               <FontAwesome name="camera" size={20} color="gray" />
             </TouchableOpacity>
             <TouchableOpacity
@@ -170,7 +184,6 @@ export default function NewJournalScreen() {
             >
               <FontAwesome name="times" size={20} color="gray" />
             </TouchableOpacity>
-
           </View>
         </View>
       </View >
