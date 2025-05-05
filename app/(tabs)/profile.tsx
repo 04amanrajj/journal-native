@@ -7,6 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import axios from 'axios';
+import Auth from '@/components/Auth';
+import Register from '@/components/Register';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const ProfileScreen: React.FC = () => {
   const toast = useToast();
@@ -15,6 +18,7 @@ const ProfileScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [showRegister, setShowRegister] = useState(false);
 
   const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -45,11 +49,6 @@ const ProfileScreen: React.FC = () => {
       const token = await AsyncStorage.getItem('authToken');
       if (!token) {
         setIsAuthenticated(false);
-        showToast({
-          title: "Session Expired",
-          description: "Please log in to continue.",
-          icon: "exclamation-circle",
-        });
         return false;
       }
 
@@ -66,11 +65,6 @@ const ProfileScreen: React.FC = () => {
       console.error('Token validation error:', error);
       await AsyncStorage.removeItem('authToken');
       setIsAuthenticated(false);
-      showToast({
-        title: "Session Expired",
-        description: "Please log in to continue.",
-        icon: "exclamation-circle",
-      });
       return false;
     }
   };
@@ -107,11 +101,6 @@ const ProfileScreen: React.FC = () => {
       if (error.response && (error.response.status === 401 || error.response.status === 404)) {
         await AsyncStorage.removeItem('authToken');
         setIsAuthenticated(false);
-        showToast({
-          title: "Session Expired",
-          description: "Please log in to continue.",
-          icon: "exclamation-circle",
-        });
       } else {
         showToast({
           title: "Oops, Something Went Wrong",
@@ -136,7 +125,9 @@ const ProfileScreen: React.FC = () => {
         }
       );
 
-      await AsyncStorage.removeItem('authToken');
+      // Clear all AsyncStorage data
+      await AsyncStorage.clear();
+
       setIsAuthenticated(false);
       showToast({
         title: "Signed Out",
@@ -145,6 +136,9 @@ const ProfileScreen: React.FC = () => {
       });
     } catch (error) {
       console.error('Error during logout:', error);
+      // Even if the API call fails, clear local storage
+      await AsyncStorage.clear();
+      setIsAuthenticated(false);
       showToast({
         title: "Oops, Something Went Wrong",
         description: "Please try again later.",
@@ -180,32 +174,47 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+    fetchUserDetails();
+  };
+
   useEffect(() => {
     fetchUserDetails();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      validateToken();
+      const checkAuth = async () => {
+        const isValid = await validateToken();
+        if (!isValid) {
+          setIsAuthenticated(false);
+        }
+      };
+      checkAuth();
     }, [])
   );
 
-  useEffect(() => {
-    if (isAuthenticated === false) {
-      router.replace('/(tabs)/auth');
-    }
-  }, [isAuthenticated]);
-
   if (isAuthenticated === null) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={styles.loadingContainer}>
+        <LoadingScreen />
       </View>
     );
   }
 
   if (!isAuthenticated) {
-    return null;
+    return showRegister ? (
+      <Register
+        onRegisterSuccess={handleAuthSuccess}
+        onShowAuth={() => setShowRegister(false)}
+      />
+    ) : (
+      <Auth
+        onAuthSuccess={handleAuthSuccess}
+        onShowRegister={() => setShowRegister(true)}
+      />
+    );
   }
 
   return (
@@ -368,11 +377,11 @@ const styles = StyleSheet.create({
     height: '100%',
     marginTop: 40,
   },
-  loadingText: {
-    fontSize: 18,
-    color: '#000',
-    textAlign: 'center',
-    marginTop: 50,
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#FFC107',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',
