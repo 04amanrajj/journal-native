@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  RefreshControl,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import JournalFetcher from "@/components/JournalFetcher";
@@ -14,6 +15,13 @@ import Icon from "react-native-vector-icons/FontAwesome"; // Import the icon lib
 import { Link, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+
+interface Journal {
+  id: number;
+  title: string;
+  content: string;
+  created_at: string;
+}
 
 export default function Home() {
   const getGreeting = () => {
@@ -27,26 +35,48 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const fetchJournals = async () => {
-      try {
-        const token = await AsyncStorage.getItem("authToken");
-        const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log("Response from server:", response.data);
-        setJournals(response.data);
-      } catch (error) {
-        console.error("Error fetching journals:", error);
-      }
-    };
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedMemories, setSelectedMemories] = useState<any[]>([]);
 
+  const fetchJournals = async () => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Response from server:", response.data);
+      const fetchedJournals = response.data;
+      setJournals(fetchedJournals);
+
+      // Update selected memories if a date is selected
+      if (selectedDate) {
+        const filtered = fetchedJournals.filter((journal: Journal) => {
+          if (!journal.created_at) return false;
+          const journalDateStr = new Date(journal.created_at).toLocaleDateString("en-US");
+          return journalDateStr === selectedDate;
+        });
+        setSelectedMemories(filtered);
+      }
+    } catch (error) {
+      console.error("Error fetching journals:", error);
+    }
+  };
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchJournals();
+    setRefreshing(false);
+  }, [selectedDate]); // Add selectedDate as dependency
+
+  useEffect(() => {
     fetchJournals();
-  }
-    , []);
+  }, []);
+
   // Function to calculate stats
 
 
@@ -85,11 +115,6 @@ export default function Home() {
 
     return maxStreak;
   };
-
-  const [journals, setJournals] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedMemories, setSelectedMemories] = useState<any[]>([]);
-
 
   const today = new Date();
   const currentDay = today.getDay();
@@ -154,7 +179,17 @@ export default function Home() {
             <Text style={styles.greetingBold}>Aman!</Text>
           </Text>
         </View>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#F9A825"]}
+              tintColor="#F9A825"
+            />
+          }
+        >
 
           {/* Navigation Buttons */}
 
@@ -169,8 +204,8 @@ export default function Home() {
                         ? "#F9A825"
                         : item.hasJournal
                           ? "#A5D6A7" // Green background if journal exists
-                          : "#EF9A9A",
-                      borderWidth: 0,
+                          : "#FFFFFF",
+                      borderWidth: 1,
                       borderColor: "#E0E0E0",
                     },
                   ]}
@@ -245,31 +280,16 @@ export default function Home() {
                     Recent Memories
                   </Text>
                 )
-              ) : null}
+              ) : (
+                <Text>
+                  Recent Memories
+                </Text>
+              )}
             </Text>
           </View>
 
           <View style={styles.memoryDetails}>
             <JournalFetcher />
-            <View>
-              {selectedMemories.slice(-3).map((journal, index) => {
-                return (
-                  <View key={index} style={styles.memoryItem}>
-                    <View style={styles.journalEntry}>
-                      <Text style={styles.journalTitle}>{journal.title}</Text>
-                      <Text style={styles.journalText}>{journal.text}</Text>
-                      <Text style={styles.journalDate}>
-                        {new Date(journal.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
           </View>
         </ScrollView>
       </View>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar, RefreshControl } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
@@ -30,6 +30,7 @@ const months = [
 const explore = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     const handleSelectDay = (day: number) => {
         setSelectedDay(day);
@@ -54,6 +55,13 @@ const explore = () => {
             return newDate;
         });
     };
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        // Add a small delay to show the refresh animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setRefreshing(false);
+    }, []);
 
     const days = useMemo(() => {
         const today = new Date();
@@ -96,26 +104,26 @@ const explore = () => {
     const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         toast.show({
-          placement: "top",
-          duration: 3000,
-          render: ({ id }) => {
-            const uniqueToastId = "toast-" + id;
-            return (
-              <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
-                <View style={styles.notification}>
-                  <Icon name={icon} size={24} color="white" />
-                </View>
-                <View style={{ paddingHorizontal: 10 }}>
-                  <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
-                  <ToastDescription style={styles.notificationDescription}>
-                    {description}
-                  </ToastDescription>
-                </View>
-              </Toast>
-            );
-          },
+            placement: "top",
+            duration: 3000,
+            render: ({ id }) => {
+                const uniqueToastId = "toast-" + id;
+                return (
+                    <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                        <View style={styles.notification}>
+                            <Icon name={icon} size={24} color="white" />
+                        </View>
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                            <ToastDescription style={styles.notificationDescription}>
+                                {description}
+                            </ToastDescription>
+                        </View>
+                    </Toast>
+                );
+            },
         });
-      };
+    };
 
     return (
         <GestureHandlerRootView>
@@ -140,6 +148,14 @@ const explore = () => {
                     contentContainerStyle={{ paddingBottom: 100 }}
                     style={{ flex: 1 }}
                     nestedScrollEnabled={true}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#F9A825"]}
+                            tintColor="#F9A825"
+                        />
+                    }
                 >
                     <View style={styles.dateContainer}>
                         <View style={styles.monthContainer}>
@@ -271,11 +287,13 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: 16,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        padding: 16,
+        shadowOffset: { width: 0, height: 1 },
+        padding: 24,
+        marginHorizontal: 2,
+        marginBottom: 22,
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     weekdays: {
         flexDirection: "row",
