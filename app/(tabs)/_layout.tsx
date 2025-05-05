@@ -60,23 +60,10 @@ const TabLayout: React.FC = () => {
       <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
       <Tabs.Screen name="create" options={{ title: 'Create' }} />
       <Tabs.Screen
-        name="auth"
-        options={{
-          title: 'Login',
-          href: isLoggedIn ? null : '/(tabs)/auth', // Hide auth tab when logged in
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="sign-in-alt" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: isLoggedIn ? 'Profile' : 'Login',
           href: '/(tabs)/profile',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name={isLoggedIn ? 'user' : 'sign-in-alt'} size={size} color={color} />
-          ),
         }}
       />
     </Tabs>
