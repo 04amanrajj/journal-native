@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import * as Haptics from 'expo-haptics';
+import LoadingScreen from './LoadingScreen';
 
 interface Journal {
     id: number;
@@ -16,34 +17,41 @@ interface Journal {
 const JournalFetcher = () => {
     const [journals, setJournals] = useState<Journal[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchJournals = async (forceRefresh = false) => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const fetchedJournals = response.data;
+            setJournals(fetchedJournals);
+
+            showToast({
+                title: "Journals Fetched",
+                description: "Your journal entries have been fetched successfully.",
+                icon: "check",
+            });
+        } catch (error) {
+            console.error("Error fetching journals:", error);
+            setJournals([]);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchJournals(true);
+    };
 
     useEffect(() => {
-        const fetchJournals = async () => {
-            try {
-                const token = await AsyncStorage.getItem("authToken");
-                const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                showToast({
-                    title: "Journals Fetched",
-                    description: "Your journal entries have been fetched successfully.",
-                    icon: "check",
-                });
-
-                setJournals(response.data);
-            } catch (error) {
-                console.error("Error fetching journals:", error);
-                setJournals([]);
-
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchJournals();
     }, []);
 
@@ -51,57 +59,97 @@ const JournalFetcher = () => {
     const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         toast.show({
-          placement: "top",
-          duration: 3000,
-          render: ({ id }) => {
-            const uniqueToastId = "toast-" + id;
-            return (
-              <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
-                <View style={styles.notification}>
-                  <Icon name={icon} size={24} color="white" />
-                </View>
-                <View style={{ paddingHorizontal: 10 }}>
-                  <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
-                  <ToastDescription style={styles.notificationDescription}>
-                    {description}
-                  </ToastDescription>
-                </View>
-              </Toast>
-            );
-          },
+            placement: "top",
+            duration: 3000,
+            render: ({ id }) => {
+                const uniqueToastId = "toast-" + id;
+                return (
+                    <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                        <View style={styles.notification}>
+                            <Icon name={icon} size={24} color="white" />
+                        </View>
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                            <ToastDescription style={styles.notificationDescription}>
+                                {description}
+                            </ToastDescription>
+                        </View>
+                    </Toast>
+                );
+            },
         });
-      };
+    };
 
     if (loading) {
         return <Text style={styles.loadingText}>Loading journals...</Text>;
     }
 
     return (
-        <FlatList
-            data={journals.reverse()}
-            nestedScrollEnabled={true}
-            contentContainerStyle={{ paddingBottom: 60 }}
-            ListHeaderComponent={() => (
-                <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
-                    Your Journal Entries
+        <View style={styles.container}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ marginHorizontal: 20, fontSize: 18, fontWeight: "900", color: "gray", fontStyle: "italic", textAlign: "left" }}>
+                    Recent Memories
                 </Text>
-            )}
-            showsVerticalScrollIndicator={false}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-                <View style={styles.journalEntry}>
-                    <Text style={styles.journalTitle}>{item.title}</Text>
-                    <Text style={styles.journalText}>{item.content}</Text>
-                    <Text style={styles.journalDate}>
-                        {new Date(item.created_at).toLocaleString()}
+                <TouchableOpacity
+                    style={styles.refreshButton}
+                    onPress={handleRefresh}
+                    disabled={refreshing}
+                >
+                    <Icon name="refresh" size={20} color="#ffffff" />
+                    <Text style={styles.refreshButtonText}>
+                        {refreshing ? '' : 'Refresh'}
                     </Text>
-                </View>
-            )}
-        />
+                </TouchableOpacity>
+            </View>
+            <FlatList
+                data={journals.reverse()}
+                contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={(item) => item.id.toString()}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                renderItem={({ item }) => (
+                    <View style={styles.journalEntry}>
+                        <Text style={styles.journalTitle}>{item.title}</Text>
+                        <Text style={styles.journalText}>{item.content}</Text>
+                        <Text style={styles.journalDate}>
+                            {new Date(item.created_at).toLocaleString()}
+                        </Text>
+                    </View>
+                )}
+            />
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    refreshButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F9A825',
+        padding: 12,
+        marginBottom: 16,
+        borderRadius: 24,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+        width: '30%',
+        alignSelf: 'flex-end',
+    },
+    refreshButtonText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: 'white',
+        fontWeight: '600',
+    },
+    listContainer: {
+        paddingBottom: 60,
+    },
     notification: {
         backgroundColor: '#F9A825',
         borderRadius: 12,
