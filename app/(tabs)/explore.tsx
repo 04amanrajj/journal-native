@@ -185,7 +185,6 @@ const explore = () => {
                     </View>
 
                     {/* JournalFetcher */}
-                    <Text style={{ margin: 20, fontSize: 28, fontWeight: "900", fontStyle: 'italic' }}>Recent Journal Entries</Text>
                     <JournalFetcher />
                 </ScrollView>
             </View>

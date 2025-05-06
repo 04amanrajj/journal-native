@@ -266,28 +266,6 @@ export default function Home() {
             </TouchableOpacity>
           </View>
 
-          {/* Memories Section */}
-
-          <View style={styles.memoriesHeader}>
-            <Text style={{ color: "#888", fontStyle: "italic", margin: "auto", textAlign: "center", width: '100%' }}>
-              {selectedDate ? (
-                selectedMemories.length === 0 ? (
-                  <Text style={{ color: "#888", fontStyle: "italic", margin: "auto", width: '100%' }}>
-                    No memories recorded on this day.
-                  </Text>
-                ) : (
-                  <Text>
-                    Recent Memories
-                  </Text>
-                )
-              ) : (
-                <Text>
-                  Recent Memories
-                </Text>
-              )}
-            </Text>
-          </View>
-
           <View style={styles.memoryDetails}>
             <JournalFetcher />
           </View>
