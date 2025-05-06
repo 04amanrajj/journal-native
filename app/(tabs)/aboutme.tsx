@@ -9,39 +9,35 @@ export default function AboutMe() {
         Linking.openURL(url).catch((err: Error) => console.error('Failed to open URL:', err));
     };
 
-
     const toast = useToast();
-  const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    toast.show({
-      placement: "top",
-      duration: 3000,
-      render: ({ id }) => {
-        const uniqueToastId = "toast-" + id;
-        return (
-          <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
-            <View style={styles.notification}>
-              <Icon name={icon} size={24} color="white" />
-            </View>
-            <View style={{ paddingHorizontal: 10 }}>
-              <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
-              <ToastDescription style={styles.notificationDescription}>
-                {description}
-              </ToastDescription>
-            </View>
-          </Toast>
-        );
-      },
-    });
-  };
+    const showToast = ({ title = "Hello!", description = "This is a customized toast message.", icon = "bell" }) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        toast.show({
+            placement: "top",
+            duration: 3000,
+            render: ({ id }) => {
+                const uniqueToastId = "toast-" + id;
+                return (
+                    <Toast nativeID={uniqueToastId} action="info" variant="outline" style={styles.notificationPopup}>
+                        <View style={styles.notification}>
+                            <Icon name={icon} size={24} color="white" />
+                        </View>
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <ToastTitle style={styles.notificationText}>{title}</ToastTitle>
+                            <ToastDescription style={styles.notificationDescription}>
+                                {description}
+                            </ToastDescription>
+                        </View>
+                    </Toast>
+                );
+            },
+        });
+    };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            {/* Basic Info Section */}
-
-
-            {/*Card */}
-            <View style={styles.card}>
+        <View style={styles.mainContainer}>
+            {/* Fixed Profile Card */}
+            <View style={styles.fixedCard}>
                 <Image
                     source={{ uri: 'https://i.imgur.com/S7yk5XY.png' }}
                     style={styles.profileImage}
@@ -51,26 +47,81 @@ export default function AboutMe() {
                 </Text>
             </View>
 
-            {/* Social Links Section */}
-            <View style={styles.linksSection}>
-                <Text style={styles.connectText}>Connect with me</Text>
+            {/* Scrollable Content */}
+            <ScrollView
+                contentContainerStyle={styles.scrollContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Tech Stack Section */}
+                <View style={styles.techStackSection}>
+                    <Text style={styles.sectionTitle}>Tech Stack</Text>
 
-                <View style={styles.linkGrid}>
-                    {socialLinks.map(({ name, url, bgColor, hoverColor, image }) => (
-                        <TouchableOpacity
-                            key={name}
-                            style={[styles.linkCard, { backgroundColor: bgColor, borderColor: hoverColor }]}
-                            onPress={() => openLink(url)}
-                        >
-                            <Image source={{ uri: image }} style={styles.linkIcon} />
-                            <Text style={styles.linkLabel}>{name}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    {/* Frontend Stack */}
+                    <View style={styles.stackContainer}>
+                        <Text style={styles.stackTitle}>Frontend</Text>
+                        <View style={styles.techGrid}>
+                            {frontendTech.map((tech) => (
+                                <View key={tech.name} style={styles.techItem}>
+                                    <Icon name={tech.icon} size={24} color="#F9A825" />
+                                    <Text style={styles.techName}>{tech.name}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Backend Stack */}
+                    <View style={styles.stackContainer}>
+                        <Text style={styles.stackTitle}>Backend</Text>
+                        <View style={styles.techGrid}>
+                            {backendTech.map((tech) => (
+                                <View key={tech.name} style={styles.techItem}>
+                                    <Icon name={tech.icon} size={24} color="#F9A825" />
+                                    <Text style={styles.techName}>{tech.name}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
+
+                {/* Social Links Section */}
+                <View style={styles.linksSection}>
+                    <Text style={styles.connectText}>Connect with me</Text>
+                    <View style={styles.linkGrid}>
+                        {socialLinks.map(({ name, url, bgColor, hoverColor, image }) => (
+                            <TouchableOpacity
+                                key={name}
+                                style={[styles.linkCard, { backgroundColor: bgColor, borderColor: hoverColor }]}
+                                onPress={() => openLink(url)}
+                            >
+                                <Image source={{ uri: image }} style={styles.linkIcon} />
+                                <Text style={styles.linkLabel}>{name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </ScrollView>
+        </View>
     );
 }
+
+const frontendTech = [
+    { name: 'React Native', icon: 'mobile' },
+    { name: 'Expo', icon: 'rocket' },
+    { name: 'TypeScript', icon: 'code' },
+    { name: 'TailwindCSS', icon: 'paint-brush' },
+    { name: 'GlueStack UI', icon: 'puzzle-piece' },
+    { name: 'Haptics', icon: 'hand-o-up' },
+
+];
+
+const backendTech = [
+    { name: 'Node.js', icon: 'server' },
+    { name: 'Express', icon: 'code' },
+    { name: 'PostgreSQL', icon: 'database' },
+    { name: 'JWT', icon: 'lock' },
+    { name: 'Knex.js', icon: 'database' },
+    { name: 'bcrypt', icon: 'lock' },
+];
 
 const socialLinks = [
     {
@@ -96,65 +147,36 @@ const socialLinks = [
     },
     {
         name: 'LinkedIn',
-        url: 'https://www.linkedin.com/in/aman-raj-226875339/',
-        bgColor: '#0274B3',
-        hoverColor: '#c1bcae',
+        url: 'https://linkedin.com/in/04amanrajj',
+        bgColor: '#e8e8e8',
+        hoverColor: '#a8bde9',
         image: 'https://logo.clearbit.com/linkedin.com',
     },
 ];
 
 const styles = StyleSheet.create({
-    notification: {
-        backgroundColor: '#F9A825',
-        borderRadius: 12,
-        width: 48,
-        height: 48,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 0,
-    },
-    notificationPopup: {
-        minWidth: '90%',
-        width: '100%',
-        padding: 12,
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
-        top: 50,
-        alignSelf: 'center',
-        zIndex: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    notificationText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'left',
-        flexShrink: 1,
-        flexWrap: 'wrap',
-    },
-    notificationDescription: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'left',
-        flexShrink: 1,
-        flexWrap: 'wrap',
-    },
-    container: {
+    mainContainer: {
+        flex: 1,
         backgroundColor: '#FFF9E6',
-        alignItems: 'center',
-        height: '100%',
-        paddingTop: 40,
     },
-    basicInfo: {
-        alignItems: 'center',
-        marginBottom: 24,
+    fixedCard: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1,
+        borderTopLeftRadius: 50,
+        borderTopRightRadius: 50,
+        paddingTop: 50,
+        paddingBottom: 80,
+        paddingHorizontal: 24,
+        height: 300,
+        backgroundColor: '#F9A825',
+    },
+    scrollContainer: {
+        paddingTop: 430, // Adjust this value to control overlap
+        paddingBottom: 40,
+        paddingHorizontal: 20,
     },
     profileImage: {
         position: 'absolute',
@@ -173,49 +195,6 @@ const styles = StyleSheet.create({
         resizeMode: 'cover',
         overflow: 'hidden',
     },
-    name: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 8,
-    },
-    bio: {
-        fontSize: 14,
-        color: '#333',
-        textAlign: 'center',
-        paddingHorizontal: 16,
-    },
-    card: {
-        borderTopLeftRadius: 50,
-        borderTopRightRadius: 50,
-        paddingTop: 50,
-        paddingBottom: 80,
-        paddingHorizontal: 24,
-        width: '95%',
-        height: 300,
-        position: 'relative',
-        overflow: 'visible',
-    },
-    categoryRow: {
-        flexDirection: 'row',
-        marginBottom: 8,
-        alignItems: 'center',
-    },
-    categoryText: {
-        fontSize: 12,
-    },
-    categorySeparator: {
-        marginHorizontal: 4,
-    },
-    categoryHighlight: {
-        fontWeight: '900',
-        fontSize: 12,
-    },
-    timeText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: '700',
-    },
     title: {
         color: '#fff',
         fontSize: 20,
@@ -226,25 +205,71 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
         textShadowColor: '#000',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
         textAlign: 'center',
         paddingHorizontal: 16,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 16,
         padding: 8,
     },
-    linksSection: {
-        marginTop: 140,
+    techStackSection: {
         width: '100%',
-        maxWidth: 320,
+        marginTop: 20,
     },
-    connectText: {
-        fontSize: 14,
+    sectionTitle: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    stackContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    stackTitle: {
+        fontSize: 18,
         fontWeight: '600',
         color: '#000',
         marginBottom: 12,
+    },
+    techGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    techItem: {
+        width: '30%',
+        alignItems: 'center',
+        marginBottom: 16,
+        backgroundColor: '#FFF9E6',
+        padding: 12,
+        borderRadius: 12,
+    },
+    techName: {
+        marginTop: 8,
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#000',
         textAlign: 'center',
-        textTransform: 'uppercase',
+    },
+    linksSection: {
+        width: '100%',
+        marginTop: 20,
+        marginBottom: 40,
+    },
+    connectText: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 20,
+        textAlign: 'center',
     },
     linkGrid: {
         flexDirection: 'row',
@@ -257,6 +282,11 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 16,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     linkIcon: {
         width: 64,
@@ -268,5 +298,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#000',
+    },
+    notificationPopup: {
+        backgroundColor: '#000',
+        borderRadius: 12,
+        padding: 12,
+    },
+    notification: {
+        backgroundColor: '#F9A825',
+        borderRadius: 8,
+        padding: 8,
+    },
+    notificationText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    notificationDescription: {
+        color: '#fff',
+        fontSize: 14,
     },
 });
