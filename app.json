@@ -4,32 +4,37 @@
     "slug": "journal-native",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icons/xxxhdpi.png",
+    "icon": "./assets/images/icons/1024.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.journalnative.app"
+      "bundleIdentifier": "com.journalnative.app",
+      "icon": "./assets/images/icons/1024.png",
+      "isTabletOnly": false,
+      "requireFullScreen": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icons/xxxhdpi.png",
+        "foregroundImage": "./assets/images/icons/play_store_512.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.journalnative.app"
+      "icon": "./assets/images/icons/play_store_512.png",
+      "package": "com.journalnative.app",
+      "permissions": []
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/icons/xxxhdpi.png"
+      "favicon": "./assets/images/icons/play_store_512.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icons/xxxhdpi.png",
+          "image": "./assets/images/icons/1024.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
