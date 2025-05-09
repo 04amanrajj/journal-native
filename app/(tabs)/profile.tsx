@@ -150,7 +150,7 @@ const ProfileScreen: React.FC = () => {
     const handleDeleteAccount = async () => {
         const token = await AsyncStorage.getItem('authToken');
         try {
-            await axios.delete('https://journal-app-backend-kxqs.onrender.com/user', {
+            await axios.delete('https://journal-app-backend-kxqs.onrender.com/user/delete', {
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
@@ -164,6 +164,7 @@ const ProfileScreen: React.FC = () => {
                 description: "Your account has been successfully deleted.",
                 icon: "trash",
             });
+            router.replace('/');
         } catch (error) {
             console.error('Error deleting account:', error);
             showToast({
