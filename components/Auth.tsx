@@ -67,6 +67,16 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
     };
 
     async function handleSignIn() {
+        
+        if (!email.includes('@')) {
+            showToast({
+                title: "Invalid Email",
+                description: "Please enter a valid email address",
+                icon: "exclamation-circle"
+            });
+            return;
+        }
+
         if (email.trim() === "" || password.trim() === "") {
             showToast({
                 title: "Empty Fields",
@@ -150,6 +160,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onShowRegister }) => {
                         autoCapitalize="none"
                         value={email}
                         onChangeText={setEmail}
+                        keyboardType="email-address"
                     />
                     <View style={styles.inputIcon}>
                         <FontAwesome5 name="envelope" size={20} color="#9CA3AF" />

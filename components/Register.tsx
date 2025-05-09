@@ -58,6 +58,15 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onShowAuth }) =>
             return false;
         }
 
+        if (!email.includes('@')) {
+            showToast({
+                title: "Invalid Email",
+                description: "Please enter a valid email address",
+                icon: "exclamation-circle"
+            });
+            return false;
+        }
+        
         if (password !== confirmPassword) {
             showToast({
                 title: "Password Mismatch",
