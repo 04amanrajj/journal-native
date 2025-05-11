@@ -5,7 +5,6 @@ import axios from "axios";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useToast, Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import * as Haptics from 'expo-haptics';
-import LoadingScreen from './LoadingScreen';
 
 interface Journal {
     id: number;
@@ -14,13 +13,54 @@ interface Journal {
     created_at: string;
 }
 
+const STORAGE_KEY = '@journals_cache';
+
 const JournalFetcher = () => {
     const [journals, setJournals] = useState<Journal[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchJournals = async (forceRefresh = false) => {
+    // Load cached journals from AsyncStorage
+    const loadCachedJournals = async () => {
         try {
+            const cachedJournals = await AsyncStorage.getItem(STORAGE_KEY);
+            if (cachedJournals) {
+                setJournals(JSON.parse(cachedJournals));
+                setLoading(false);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("Error loading cached journals:", error);
+            return false;
+        }
+    };
+
+    // Save journals to AsyncStorage
+    const saveJournalsToStorage = async (journals: Journal[]) => {
+        try {
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(journals));
+        } catch (error) {
+            console.error("Error saving journals to storage:", error);
+        }
+    };
+
+    const fetchJournals = async (forceRefresh = false) => {
+        // If not forcing refresh and we have cached data, skip API call
+        if (!forceRefresh) {
+            const hasCachedData = await loadCachedJournals();
+            if (hasCachedData && !refreshing) {
+                showToast({
+                    title: "Journals Loaded",
+                    description: "Your journal entries have been loaded from cache.",
+                    icon: "database",
+                });
+                return;
+            }
+        }
+
+        try {
+            setLoading(true);
             const token = await AsyncStorage.getItem("authToken");
             const response = await axios.get("https://journal-app-backend-kxqs.onrender.com/journal", {
                 headers: {
@@ -31,11 +71,12 @@ const JournalFetcher = () => {
 
             const fetchedJournals = response.data;
             setJournals(fetchedJournals);
+            await saveJournalsToStorage(fetchedJournals);
 
             showToast({
                 title: "Journals Fetched",
-                description: "Your journal entries have been fetched successfully.",
-                icon: "check",
+                description: "Your journal entries have been fetched from the server.",
+                icon: "cloud-download",
             });
         } catch (error) {
             console.error("Error fetching journals:", error);
@@ -80,7 +121,7 @@ const JournalFetcher = () => {
         });
     };
 
-    if (loading) {
+    if (loading && journals.length === 0) {
         return <Text style={styles.loadingText}>Loading journals...</Text>;
     }
 
@@ -95,14 +136,14 @@ const JournalFetcher = () => {
                     onPress={handleRefresh}
                     disabled={refreshing}
                 >
-                    <Icon name="refresh" size={20} color="#ffffff" />
+                    <Icon name={refreshing ? "spinner" : "refresh"} size={20} color="#ffffff" />
                     <Text style={styles.refreshButtonText}>
-                        {refreshing ? '' : 'Refresh'}
+                        {refreshing ? 'Refreshing...' : 'Refresh'}
                     </Text>
                 </TouchableOpacity>
             </View>
             <FlatList
-                data={journals.reverse()}
+                data={[...journals].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item) => item.id.toString()}
@@ -122,6 +163,7 @@ const JournalFetcher = () => {
     );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
     container: {
         flex: 1,
