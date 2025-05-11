@@ -49,7 +49,6 @@ export default function Home() {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Response from server:", response.data);
       const fetchedJournals = response.data;
       setJournals(fetchedJournals);
 
@@ -126,7 +125,6 @@ export default function Home() {
     date.setDate(firstDayOfWeek.getDate() + idx);
 
     const hasJournal = journals.some((journal) => {
-      console.log("Journal date:", journal);
       if (!journal.created_at) return false;
       const journalDate = new Date(journal.created_at);
       return journalDate.toLocaleDateString("en-US") === date.toLocaleDateString("en-US");
