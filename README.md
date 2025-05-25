@@ -1,6 +1,6 @@
-# Journal Native
+# Journal Native | [Journal Native Backend](https://github.com/04amanrajj/journal-app-backend)
 
-Journal Native is a hobby project turned public, offering a secure, mobile-only platform for journaling. With its sleek, modern UI, the app makes it easy to write and store your personal entries, allowing you to relive cherished memories whenever you want. Built with care, it ensures your thoughts are safely preserved and accessible on the go.
+Journal Native is my hobby project, offering a secure, mobile-only platform for journaling. With its sleek, modern UI, the app makes it easy to write and store your personal entries, allowing you to relive cherished memories whenever you want. Built with care, it ensures your thoughts are safely preserved and accessible on the go.
 
 ## Features
 
